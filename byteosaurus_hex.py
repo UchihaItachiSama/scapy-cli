@@ -77,21 +77,19 @@ def requires(module):
             "UDP Source Port", "UDP Destination Port", "Tag (y/n)"
         ],
         "UDP": [
-            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC",
-            "Source IP", "Destination IP",
-            "UDP Source Port", "UDP Destination Port", "Tag (y/n)"
+            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC", "Source IP",
+            "Destination IP", "UDP Source Port", "UDP Destination Port",
+            "Tag (y/n)"
         ],
         "TCP": [
-            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC",
-            "Source IP", "Destination IP",
-            "TCP Source Port", "TCP Destination Port", "Tag (y/n)"
+            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC", "Source IP",
+            "Destination IP", "TCP Source Port", "TCP Destination Port",
+            "Tag (y/n)"
         ],
         "VXLAN": [
             "Outer Source MAC (de:ad:be:af:ca:fe)", "Outer Destination MAC",
-            "Outer Source IP", "Outer Destination IP",
-            "Outer UDP Source Port",
-            "Outer UDP Destination Port (default 4789)",
-            "VNI"
+            "Outer Source IP", "Outer Destination IP", "Outer UDP Source Port",
+            "Outer UDP Destination Port (default 4789)", "VNI"
         ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
@@ -130,7 +128,9 @@ def build_icmp():
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid choice, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -144,12 +144,13 @@ def build_icmp():
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan id'{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan id'{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             icmp_pkt = icmp_packet(fuzzy, 'ICMP', icmp_type, inputs)
             if icmp_pkt != None:
-                icmp_pkt =  add_vlan(icmp_pkt, vlans)
+                icmp_pkt = add_vlan(icmp_pkt, vlans)
         if icmp_pkt != None:
             logger.info("ICMP Packet built")
             icmp_pkt.show()
@@ -157,7 +158,8 @@ def build_icmp():
         else:
             return None
     else:
-        logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+        logger.critical(
+            "Invalid input '{}' Expected string (y/n)".format(fuzzy))
         return None
 
 
@@ -193,7 +195,9 @@ def build_arp():
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid choice, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -206,7 +210,8 @@ def build_arp():
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan id'{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan id'{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             arp_pkt = arp_packet(fuzzy, 'ARP', arp_type, inputs)
@@ -219,7 +224,8 @@ def build_arp():
         else:
             return None
     else:
-        logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+        logger.critical(
+            "Invalid input '{}' Expected string (y/n)".format(fuzzy))
         return None
 
 
@@ -247,7 +253,9 @@ def build_group_records(msg_type):
                                    srcaddrs=src_addrs)
                     final_grp_arr.append(gr1)
         except ValueError:
-            logger.critical("Invalid input for num_records:'{}'. Expecting integer value".format(num_records))
+            logger.critical(
+                "Invalid input for num_records:'{}'. Expecting integer value".
+                format(num_records))
             logger.critical(ValueError, exc_info=True)
             return None
     elif msg_type == "L_G":
@@ -268,7 +276,9 @@ def build_group_records(msg_type):
                                    srcaddrs=src_addrs)
                     final_grp_arr.append(gr1)
         except ValueError:
-            logger.critical("Invalid input for num_records:'{}'. Expecting integer value".format(num_records))
+            logger.critical(
+                "Invalid input for num_records:'{}'. Expecting integer value".
+                format(num_records))
             logger.critical(ValueError, exc_info=True)
             return None
     return final_grp_arr
@@ -290,7 +300,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -309,7 +321,8 @@ def build_igmp(msg_type, version):
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
@@ -334,7 +347,8 @@ def build_igmp(msg_type, version):
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
@@ -359,7 +373,8 @@ def build_igmp(msg_type, version):
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(
@@ -372,7 +387,9 @@ def build_igmp(msg_type, version):
             p.show()
             return p, inputs[3], inputs[4]
         else:
-            logger.critical("Invalid version: '{}' Expected value (v1/v2/v3)".format(version))
+            logger.critical(
+                "Invalid version: '{}' Expected value (v1/v2/v3)".format(
+                    version))
             return None
     elif msg_type == "M_Q_GS" and (version == "v2" or version == "v3"):
         # Gettting the input parameters
@@ -388,7 +405,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -401,20 +420,25 @@ def build_igmp(msg_type, version):
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
                     type=0x11, gaddr=inputs[2])
                 if not (p[IGMP].igmpize()):
-                    logger.critical("Failed building IGMPv2 Membership Query, Group specific")
+                    logger.critical(
+                        "Failed building IGMPv2 Membership Query, Group specific"
+                    )
                     return None
             else:
                 vlans = inputs[3].split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
                     type=0x11, gaddr=inputs[2])
                 if not (p[IGMP].igmpize()):
-                    logger.critical("Failed building IGMPv2 Membership Query, Group specific")
+                    logger.critical(
+                        "Failed building IGMPv2 Membership Query, Group specific"
+                    )
                     return None
                 p = add_vlan(p, vlans)
             logger.info("IGMPv2 Membership Query, Group specific")
@@ -425,27 +449,34 @@ def build_igmp(msg_type, version):
                 p = Ether(src=inputs[0]) / IP(
                     src=inputs[1]) / IGMPv3() / IGMPv3mq(gaddr=inputs[2])
                 if not (p[IGMPv3].igmpize()):
-                    logger.critical("Failed building IGMPv3 Membership Query, Group specific")
+                    logger.critical(
+                        "Failed building IGMPv3 Membership Query, Group specific"
+                    )
                     return None
             else:
                 vlans = inputs[3].split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(
                     src=inputs[1]) / IGMPv3() / IGMPv3mq(gaddr=inputs[2])
                 if not (p[IGMPv3].igmpize()):
-                    logger.critical("Failed building IGMPv3 Membership Query, Group specific")
+                    logger.critical(
+                        "Failed building IGMPv3 Membership Query, Group specific"
+                    )
                     return None
                 p = add_vlan(p, vlans)
             logger.info("IGMPv3 Membership Query, Group specific")
             p.show()
             return p, inputs[4], inputs[5]
         else:
-            logger.critical("Invalid version: '{}' Expected value (v1/v2/v3)".format(version))
+            logger.critical(
+                "Invalid version: '{}' Expected value (v1/v2/v3)".format(
+                    version))
             return None
     elif msg_type == "M_Q_G_SS" and (version == "v3"):
         # Gettting the input parameters
@@ -460,7 +491,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -479,14 +512,17 @@ def build_igmp(msg_type, version):
                                                          numsrc=len(src_addrs),
                                                          srcaddrs=src_addrs)
                 if not (p[IGMPv3].igmpize()):
-                    logger.critical("Failed building IGMPv3 Membership Query, Group & Source specific")
+                    logger.critical(
+                        "Failed building IGMPv3 Membership Query, Group & Source specific"
+                    )
                     return None
             else:
                 vlans = inputs[4].split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(
@@ -494,14 +530,18 @@ def build_igmp(msg_type, version):
                                                          numsrc=len(src_addrs),
                                                          srcaddrs=src_addrs)
                 if not (p[IGMPv3].igmpize()):
-                    logger.critical("Failed building IGMPv3 Membership Query, Group & Source specific")
+                    logger.critical(
+                        "Failed building IGMPv3 Membership Query, Group & Source specific"
+                    )
                     return None
                 p = add_vlan(p, vlans)
             logger.info("IGMPv3 Membership Query, Group & Source specific")
             p.show()
             return p, inputs[5], inputs[6]
         else:
-            logger.critical("Invalid version: '{}' Expected value (v1/v2/v3)".format(version))
+            logger.critical(
+                "Invalid version: '{}' Expected value (v1/v2/v3)".format(
+                    version))
             return None
     elif msg_type == "M_R" and (version == "v1" or version == "v2"):
         # Gettting the input parameters
@@ -517,7 +557,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -537,7 +579,8 @@ def build_igmp(msg_type, version):
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
@@ -562,7 +605,8 @@ def build_igmp(msg_type, version):
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
-                    logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                    logger.critical(
+                        "Invalid vlan '{}' Expected integer".format(vlans))
                     logger.critical(ValueError, exc_info=True)
                     return None
                 p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(
@@ -575,7 +619,9 @@ def build_igmp(msg_type, version):
             p.show()
             return p, inputs[4], inputs[5]
         else:
-            logger.critical("Invalid version: '{}' Expected value (v1/v2/v3)".format(version))
+            logger.critical(
+                "Invalid version: '{}' Expected value (v1/v2/v3)".format(
+                    version))
             return None
     elif msg_type == "M_R" and version == "v3":
         # Gettting the input parameters
@@ -591,7 +637,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Build group records
         group_rec = build_group_records("M_R")
@@ -614,13 +662,16 @@ def build_igmp(msg_type, version):
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan '{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMPv3() / IGMPv3mr(
                 numgrp=len(group_rec), records=group_rec)
             if not (p[IGMPv3].igmpize()):
-                logger.critical("Failed building IGMPv3 Membership Query, Group & Source specific")
+                logger.critical(
+                    "Failed building IGMPv3 Membership Query, Group & Source specific"
+                )
                 return None
             p = add_vlan(p, vlans)
         logger.info("IGMPv3 Membership Report")
@@ -640,7 +691,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -658,7 +711,8 @@ def build_igmp(msg_type, version):
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan '{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMP(type=0x17,
@@ -684,7 +738,9 @@ def build_igmp(msg_type, version):
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid input, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid input, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Build group records
         group_rec = build_group_records("L_G")
@@ -707,7 +763,8 @@ def build_igmp(msg_type, version):
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan '{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan '{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             p = Ether(src=inputs[0]) / IP(src=inputs[1]) / IGMPv3() / IGMPv3mr(
@@ -720,7 +777,9 @@ def build_igmp(msg_type, version):
         p.show()
         return p, inputs[3], inputs[4]
     else:
-        logger.critical("Invalid msg_type: '{}' or version: '{}' provided".format(msg_type, version))
+        logger.critical(
+            "Invalid msg_type: '{}' or version: '{}' provided".format(
+                msg_type, version))
         return None
 
 
@@ -752,8 +811,8 @@ def igmp():
                 input(
                     "\nIGMP Message Type:\n\n1 -- {}\n2 -- {}\n3 -- {}\n4 -- {}\n\nEnter your choice (1-4) > "
                     .format("Membership Query, General",
-                            "Membership Query, Group-Specific", "Membership Report",
-                            "Leave Group")).strip())
+                            "Membership Query, Group-Specific",
+                            "Membership Report", "Leave Group")).strip())
             if msg_type == 1:  #Membership Query, General
                 return build_igmp("M_Q_G", igmp_ver)
             elif msg_type == 2:  #Membership Query, Group-Specific
@@ -763,7 +822,9 @@ def igmp():
             elif msg_type == 4:  #Leave Group
                 return build_igmp("L_G", igmp_ver)
             else:
-                logger.critical("Invalid msg_type: '{}' Expected integer (1-4)".format(msg_type))
+                logger.critical(
+                    "Invalid msg_type: '{}' Expected integer (1-4)".format(
+                        msg_type))
                 return None
         except ValueError:
             logger.critical("Invalid input, expected integer (1-4).")
@@ -788,13 +849,17 @@ def igmp():
             elif msg_type == 5:  #Leave Group
                 return build_igmp("L_G", igmp_ver)
             else:
-                logger.critical("Invalid msg_type: '{}' Expected integer (1-5)".format(msg_type))
+                logger.critical(
+                    "Invalid msg_type: '{}' Expected integer (1-5)".format(
+                        msg_type))
                 return None
         except ValueError:
             logger.critical("Invalid input, expected integer (1-5).")
             return None
     else:
-        logger.critical("Invalid igmp_ver: '{}' Expected string (v1/v2/v3)".format(igmp_ver))
+        logger.critical(
+            "Invalid igmp_ver: '{}' Expected string (v1/v2/v3)".format(
+                igmp_ver))
         return None
 
 
@@ -842,7 +907,9 @@ def build_mcast():
             elif "Tag" not in input_param[i]:
                 inputs.insert(i, temp_input)
             else:
-                logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                logger.critical(
+                    "Invalid choice, got '{}' expected values (y/n)".format(
+                        temp_input))
                 return None
         # Common parameters
         for j in range(0, len(common_param)):
@@ -856,7 +923,8 @@ def build_mcast():
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
-                logger.critical("Invalid vlan id'{}' Expected integer".format(vlans))
+                logger.critical(
+                    "Invalid vlan id'{}' Expected integer".format(vlans))
                 logger.critical(ValueError, exc_info=True)
                 return None
             udp_pkt = udp_packet(fuzzy, 'MCAST', inputs)
@@ -869,7 +937,8 @@ def build_mcast():
         else:
             return None
     else:
-        logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+        logger.critical(
+            "Invalid input '{}' Expected string (y/n)".format(fuzzy))
         return None
 
 
@@ -951,7 +1020,9 @@ def customAction(packets, input_vars, edit_type):
             else:
                 pass  # Currently for non-IP only flows not adding the IP packets
     else:
-        logger.critical("Invalid edit_type: '{}'. Expected 'ALL/IP/NON-IP".format(edit_type))
+        logger.critical(
+            "Invalid edit_type: '{}'. Expected 'ALL/IP/NON-IP".format(
+                edit_type))
         return None
     return final_pkts
 
@@ -974,7 +1045,8 @@ def getFlow(packets, flows, filter_type):
             else:
                 pass
     else:
-        logger.critical("Invalid edit_type: '{}'. Expected 'IP/NON-IP".format(filter_type))
+        logger.critical(
+            "Invalid edit_type: '{}'. Expected 'IP/NON-IP".format(filter_type))
         sys.exit(1)
     return curr_flow
 
@@ -989,7 +1061,9 @@ def threaded_sendp(packets, count, intf):
         if count == "c":
             sendp(packets, iface=intf, loop=1, verbose=0)
         else:
-            logger.critical("Invalid packet count '{}' of type '{}' Expected int or 'c'".format(count, type(count)))
+            logger.critical(
+                "Invalid packet count '{}' of type '{}' Expected int or 'c'".
+                format(count, type(count)))
             return None
 
 
@@ -1076,7 +1150,9 @@ def pcap_mod():
             index = 0
             ip_flows = []
             flow_table = []
-            flow_table_headers = ['Index', 'Source', 'Destination', 'Packet Count']
+            flow_table_headers = [
+                'Index', 'Source', 'Destination', 'Packet Count'
+            ]
             for key, count in ip_packet_counts.items():
                 index += 1
                 #print ("{} > {:<15} <----> {:<20} pkts:{:<10}".format(index, key[0], key[1], count))
@@ -1151,12 +1227,15 @@ def pcap_mod():
             non_ip_packet_counts = Counter()
             for non_ip_pkt in pkts:
                 if not (non_ip_pkt.haslayer(IP)):
-                    key = tuple(([non_ip_pkt[Ether].src, non_ip_pkt[Ether].dst]))
+                    key = tuple(([non_ip_pkt[Ether].src,
+                                  non_ip_pkt[Ether].dst]))
                     non_ip_packet_counts.update([key])
             index = 0
             non_ip_flows = []
             flow_table = []
-            flow_table_headers = ['Index', 'Source MAC', 'Destination MAC', 'Packet Count']
+            flow_table_headers = [
+                'Index', 'Source MAC', 'Destination MAC', 'Packet Count'
+            ]
             for key, count in non_ip_packet_counts.items():
                 index += 1
                 flow_table.append([index, key[0], key[1], count])
@@ -1169,8 +1248,8 @@ def pcap_mod():
                          colalign=("center", "left", "left", "center")))
 
             flow_index = (input(
-                "\nSelect flows to modify and replay (all to modify all flows) > ").
-                          strip()).split(",")
+                "\nSelect flows to modify and replay (all to modify all flows) > "
+            ).strip()).split(",")
             if len(flow_index) == 1 and flow_index[0] == "all":
                 # Getting input parameters
                 input_param, common_param = requires("PCAP")
@@ -1243,7 +1322,9 @@ def pcap_mod():
         logging.info("Done with PCAP module")
         pass
     except ValueError:
-        logger.critical("Invalid action: '{}' provided. Expected integer (1-4)".format(action))
+        logger.critical(
+            "Invalid action: '{}' provided. Expected integer (1-4)".format(
+                action))
         return None
 
 
@@ -1255,7 +1336,8 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
     elif arp_type == 'resp':
         op_code = "is-at"
     else:
-        logger.critical("Invalid arp_type: '{}' Expected value (req/resp)".format(arp_type))
+        logger.critical(
+            "Invalid arp_type: '{}' Expected value (req/resp)".format(arp_type))
         return None
     if fuzzy == 'y':
         if module != None and len(arp_inputs) != 0:
@@ -1263,7 +1345,7 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
                 src_mac = sender_mac = get_if_hwaddr(arp_inputs[1])
                 sender_ip = get_if_addr(arp_inputs[1])
                 ip_pattern = re.compile(r'^0\.0\.0\.0$')
-                if ip_pattern.match(sender_ip): # If there is no IP on port generate random IP in 172.16.0.0/12
+                if ip_pattern.match(sender_ip):  # If there is no IP on port generate random IP in 172.16.0.0/12
                     sender_ip = RandIP("172.16.0.0/12")._fix()
                 trgt_ip = RandIP("172.16.0.0/12")._fix()
                 if arp_type == "req":
@@ -1278,7 +1360,7 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
             if module == 'ARP':
                 src_mac = arp_inputs[0]
                 sender_mac = arp_inputs[2]
-                sender_ip =arp_inputs[3]
+                sender_ip = arp_inputs[3]
                 trgt_ip = arp_inputs[5]
                 if arp_type == "req":
                     dst_mac = 'ff:ff:ff:ff:ff:ff'
@@ -1288,12 +1370,11 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
                     trgt_mac = arp_inputs[4]
         else:
             return None
-    final_packet = (Ether(src=src_mac, dst=dst_mac)) / ARP(
-                    op=op_code,
-                    hwsrc=sender_mac,
-                    psrc=sender_ip,
-                    hwdst=trgt_mac,
-                    pdst=trgt_ip)
+    final_packet = (Ether(src=src_mac, dst=dst_mac)) / ARP(op=op_code,
+                                                           hwsrc=sender_mac,
+                                                           psrc=sender_ip,
+                                                           hwdst=trgt_mac,
+                                                           pdst=trgt_ip)
     return final_packet
 
 
@@ -1305,7 +1386,9 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
     elif icmp_type == 'reply':
         pkt_type = 'echo-reply'
     else:
-        logger.critical("Invalid icmp_type: '{}' Expected value (req/reply)".format(icmp_type))
+        logger.critical(
+            "Invalid icmp_type: '{}' Expected value (req/reply)".format(
+                icmp_type))
         return None
     if fuzzy == 'y':
         if module != None:
@@ -1317,7 +1400,7 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
                 src_mac, dst_mac = get_if_hwaddr(icmp_inputs[1]), RandMAC()._fix()
                 src_ip, dst_ip = get_if_addr(icmp_inputs[1]), RandIP("172.16.0.0/12")._fix()
                 ip_pattern = re.compile(r'^0\.0\.0\.0$')
-                if ip_pattern.match(src_ip): # If there is no IP on port generate random IP in 172.16.0.0/12
+                if ip_pattern.match(src_ip):  # If there is no IP on port generate random IP in 172.16.0.0/12
                     src_ip = RandIP("172.16.0.0/12")._fix()
                 ttl = randint(10, 255)
             else:
@@ -1333,21 +1416,29 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
             elif module == 'ICMP':
                 dst_mac = icmp_inputs[1]
                 dst_ip = icmp_inputs[3]
-                mac_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
-                ip_pattern = re.compile(r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+                mac_pattern = re.compile(
+                    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+                ip_pattern = re.compile(
+                    r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+                )
                 ip_pattern_2 = re.compile(r'^0\.0\.0\.0$')
                 # If no valid source mac provided get it from source interface
                 if mac_pattern.match(icmp_inputs[0].strip()):
                     src_mac = icmp_inputs[0]
                 else:
-                    logger.error("Invalid source MAC provided. Extracting source MAC from source interface.")
+                    logger.error(
+                        "Invalid source MAC provided. Extracting source MAC from source interface."
+                    )
                     src_mac = get_if_hwaddr(icmp_inputs[7])
                 # If no valid source IP provided get it from source interface
                 if not ip_pattern.match(icmp_inputs[2]):
-                    logger.error("Invalid source IP provided. Extracting source IP from source interface.")
+                    logger.error(
+                        "Invalid source IP provided. Extracting source IP from source interface."
+                    )
                     src_ip = get_if_addr(icmp_inputs[7])
                     if ip_pattern_2.match(src_ip):
-                        logger.critical("Source interface does not have a valid IP address")
+                        logger.critical(
+                            "Source interface does not have a valid IP address")
                         return None
                 else:
                     src_ip = icmp_inputs[2]
@@ -1357,8 +1448,8 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
     random_data = urandom(64)  # This is for data payload
     random_id = randint(1, 2000)  # This is for identifier
     final_packet = Ether(src=src_mac, dst=dst_mac) / IP(
-                    src=src_ip, dst=dst_ip, ttl=ttl) / ICMP(
-                    id=random_id, type=pkt_type) / Raw(load=random_data)
+        src=src_ip, dst=dst_ip, ttl=ttl) / ICMP(
+            id=random_id, type=pkt_type) / Raw(load=random_data)
     return final_packet
 
 
@@ -1388,18 +1479,24 @@ def udp_packet(fuzzy, module, udp_inputs):
                 src_ip, dst_ip = udp_inputs[2], udp_inputs[3]
                 udp_sport, udp_dport = int(udp_inputs[4]), int(udp_inputs[5])
             elif module == 'MCAST':
-                mac_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
-                ip_pattern = re.compile(r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+                mac_pattern = re.compile(
+                    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+                ip_pattern = re.compile(
+                    r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+                )
                 ip_pattern_2 = re.compile(r'^0\.0\.0\.0$')
                 if mac_pattern.match(udp_inputs[0].strip()):
                     src_mac = udp_inputs[0]
                 else:
                     src_mac = get_if_hwaddr(udp_inputs[7])
                 if not ip_pattern.match(udp_inputs[1].strip()):
-                    logger.error("Invalid source IP provided. Extracting source IP from source interface.")
+                    logger.error(
+                        "Invalid source IP provided. Extracting source IP from source interface."
+                    )
                     src_ip = get_if_addr(udp_inputs[7])
                     if ip_pattern_2.match(src_ip):
-                        logger.critical("Source interface does not have a valid IP address")
+                        logger.critical(
+                            "Source interface does not have a valid IP address")
                         return None
                 else:
                     src_ip = udp_inputs[1]
@@ -1413,13 +1510,15 @@ def udp_packet(fuzzy, module, udp_inputs):
                     if udp_inputs[4] and udp_inputs[3]:
                         udp_dport, udp_sport = int(udp_inputs[4]), int(udp_inputs[3])
                 except ValueError:
-                    logger.critical("Invalid udp_sport: '{}' and udp_dport: '{}' provided")
+                    logger.critical(
+                        "Invalid udp_sport: '{}' and udp_dport: '{}' provided")
                     return None
         else:
             return None
     random_data = urandom(64)  # This is for data payload
-    final_packet = Ether(src=src_mac, dst=dst_mac) / IP(src=src_ip, dst=dst_ip, ttl=randint(10,255)) / UDP(
-                    sport=udp_sport, dport=udp_dport) / Raw(load=random_data)
+    final_packet = Ether(src=src_mac, dst=dst_mac) / IP(
+        src=src_ip, dst=dst_ip, ttl=randint(10, 255)) / UDP(
+            sport=udp_sport, dport=udp_dport) / Raw(load=random_data)
     return final_packet
 
 
@@ -1442,8 +1541,9 @@ def tcp_packet(fuzzy, module, tcp_inputs):
                 tcp_sport, tcp_dport = int(tcp_inputs[4]), int(tcp_inputs[5])
         else:
             return None
-    final_packet = Ether(src=src_mac, dst=dst_mac) / IP(src=src_ip, dst=dst_ip, ttl=randint(10,255)) / TCP (
-                sport=tcp_sport, dport=tcp_dport, flags='S')
+    final_packet = Ether(src=src_mac, dst=dst_mac) / IP(
+        src=src_ip, dst=dst_ip, ttl=randint(10, 255)) / TCP(
+            sport=tcp_sport, dport=tcp_dport, flags='S')
     return final_packet
 
 
@@ -1462,14 +1562,17 @@ def vxlan_packet(fuzzy, inner_pkt, vxlan_inputs):
         if inner_pkt != None and len(vxlan_inputs) != 0:
             outer_dst_mac = vxlan_inputs[1]
             # If no valid outer source mac provided pull from source interface
-            mac_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+            mac_pattern = re.compile(
+                r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
             if mac_pattern.match(vxlan_inputs[0].strip()):
                 outer_src_mac = vxlan_inputs[0]
             else:
                 outer_src_mac = get_if_hwaddr(vxlan_inputs[8])
             # If no valid outer source IP provided assign random IP
             outer_src_ip = vxlan_inputs[2]
-            ip_pattern = re.compile(r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+            ip_pattern = re.compile(
+                r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+            )
             if not ip_pattern.match(outer_src_ip):
                 outer_src_ip = RandIP("192.168.0.0/12")._fix()
             outer_dst_ip = vxlan_inputs[3]
@@ -1478,8 +1581,8 @@ def vxlan_packet(fuzzy, inner_pkt, vxlan_inputs):
         else:
             return None
     final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac) / IP(
-                flags='DF', src=outer_src_ip, dst=outer_dst_ip, ttl=randint(10,255)) / UDP (
-                sport=outer_src_port, dport=outer_dst_port) / VXLAN(
+        flags='DF', src=outer_src_ip, dst=outer_dst_ip, ttl=randint(
+            10, 255)) / UDP(sport=outer_src_port, dport=outer_dst_port) / VXLAN(
                 vni=vni, flags=8) / inner_pkt
     return final_pkt
 
@@ -1513,7 +1616,7 @@ def build_vxlan(msg_type):
             icmp_type = (input("ICMP Type (req/reply) > ").strip()).lower()
             # Getting input parameters
             inputs = []
-            del icmp_input_param[-1] # Skipping VLAN tag for inner ICMP
+            del icmp_input_param[-1]  # Skipping VLAN tag for inner ICMP
             for i in range(0, len(icmp_input_param)):
                 temp_input = input("Inner {} > ".format(icmp_input_param[i]))
                 inputs.insert(i, temp_input)
@@ -1538,7 +1641,8 @@ def build_vxlan(msg_type):
             else:
                 return None
         else:
-            logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
             return None
     elif msg_type == 'VXLAN_UDP':
         # Get input parameters
@@ -1565,12 +1669,12 @@ def build_vxlan(msg_type):
         elif fuzzy == 'n':
             # Get inputs parameters
             udp_inputs = []
-            del udp_input_param[-1] # Skipping VLAN Tag for inner UDP
+            del udp_input_param[-1]  # Skipping VLAN Tag for inner UDP
             for i in range(0, len(udp_input_param)):
                 temp_input = input("Inner {} > ".format(udp_input_param[i]))
                 udp_inputs.insert(i, temp_input)
             inner_udp_pkt = udp_packet(fuzzy, 'VXLAN', udp_inputs)
-            # Craft outer vxlan packet 
+            # Craft outer vxlan packet
             vxlan_inputs = []
             for i in range(0, len(vxlan_input_param)):
                 temp_input = input("{} > ".format(vxlan_input_param[i]))
@@ -1590,7 +1694,8 @@ def build_vxlan(msg_type):
             else:
                 return None
         else:
-            logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
             return None
     elif msg_type == 'VXLAN_TCP':
         # Get input parameters
@@ -1617,7 +1722,7 @@ def build_vxlan(msg_type):
         elif fuzzy == 'n':
             # Get input prarameters
             tcp_inputs = []
-            del tcp_input_param[-1] # Skipping VLAN tag for inner TCP
+            del tcp_input_param[-1]  # Skipping VLAN tag for inner TCP
             for i in range(0, len(tcp_input_param)):
                 temp_input = input("Inner {} > ".format(tcp_input_param[i]))
                 tcp_inputs.insert(i, temp_input)
@@ -1642,7 +1747,8 @@ def build_vxlan(msg_type):
             else:
                 return None
         else:
-            logger.critical("Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
             return None
     else:
         logger.critical("Invalid msg_type: '{}' provided.".format(msg_type))
@@ -1679,7 +1785,7 @@ def vxlan():
 #################################################################################################################
 def callModule(module_number):
     try:
-        if 1<= module_number <=5:
+        if 1 <= module_number <= 5:
             flow_arr = []
             flow_count = int(input("Enter the number of flows > ").strip())
             for index in range(0, flow_count):
@@ -1706,7 +1812,8 @@ def callModule(module_number):
         elif module_number == 6:
             _ = pcap_mod()
         else:
-            logger.critical("Invalid module number provided '{}'".format(module_number))
+            logger.critical(
+                "Invalid module number provided '{}'".format(module_number))
             return None
     except ValueError:
         logger.error("Invalid flow count. Expected integer")
