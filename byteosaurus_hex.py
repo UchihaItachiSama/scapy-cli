@@ -24,36 +24,6 @@ import logging
 
 
 #################################################################################################################
-class MyFormatter(logging.Formatter):
-    err_fmt = "%(asctime)s: %(levelname)s: %(message)s, at line %(lineno)d, in %(funcName)s()"
-    crit_fmt = "%(asctime)s: %(levelname)s: %(message)s, at line %(lineno)d, in %(funcName)s()"
-    info_fmt = "%(asctime)s: %(levelname)s: %(message)s"
-
-    def __init__(self):
-        super().__init__(fmt="%(levelno)d: %(msg)s", datefmt=None, style='%')
-
-    def format(self, record):
-        format_orig = self._style._fmt
-        if record.levelno == logging.CRITICAL:
-            self._style._fmt = MyFormatter.crit_fmt
-        elif record.levelno == logging.INFO:
-            self._style._fmt = MyFormatter.info_fmt
-        elif record.levelno == logging.ERROR:
-            self._style._fmt = MyFormatter.err_fmt
-        result = logging.Formatter.format(self, record)
-        self._style._fmt = format_orig
-        return result
-
-
-fmt = MyFormatter()
-hdlr = logging.StreamHandler(sys.stdout)
-hdlr.setFormatter(fmt)
-logging.root.addHandler(hdlr)
-logging.root.setLevel(logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
-#################################################################################################################
 def requires(module):
     req_arr = {
         "ICMP": [
@@ -1838,6 +1808,36 @@ def print_menu():
     print('=' * 50 + "\n")
     for key in available_mods.keys():
         print(key, '--', available_mods[key])
+
+
+#################################################################################################################
+class MyFormatter(logging.Formatter):
+    err_fmt = "%(asctime)s: %(levelname)s: %(message)s, at line %(lineno)d, in %(funcName)s()"
+    crit_fmt = "%(asctime)s: %(levelname)s: %(message)s, at line %(lineno)d, in %(funcName)s()"
+    info_fmt = "%(asctime)s: %(levelname)s: %(message)s"
+
+    def __init__(self):
+        super().__init__(fmt="%(levelno)d: %(msg)s", datefmt=None, style='%')
+
+    def format(self, record):
+        format_orig = self._style._fmt
+        if record.levelno == logging.CRITICAL:
+            self._style._fmt = MyFormatter.crit_fmt
+        elif record.levelno == logging.INFO:
+            self._style._fmt = MyFormatter.info_fmt
+        elif record.levelno == logging.ERROR:
+            self._style._fmt = MyFormatter.err_fmt
+        result = logging.Formatter.format(self, record)
+        self._style._fmt = format_orig
+        return result
+
+
+fmt = MyFormatter()
+hdlr = logging.StreamHandler(sys.stdout)
+hdlr.setFormatter(fmt)
+logging.root.addHandler(hdlr)
+logging.root.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 #################################################################################################################
