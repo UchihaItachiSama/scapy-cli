@@ -1,9 +1,11 @@
 # netpktgen
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Modules](#modules)
-- [Usage](#usage)
+- [netpktgen](#netpktgen)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+    - [Manual Installation](#manual-installation)
+  - [Modules](#modules)
+  - [Usage](#usage)
     - [Example showing random ICMP packet generation](#example-showing-random-icmp-packet-generation)
     - [Example showing tagged multicast packet generation](#example-showing-tagged-multicast-packet-generation)
     - [Example showing IGMP module](#example-showing-igmp-module)
@@ -63,7 +65,7 @@ The script currently supports following packet generation modules
 | ARP | <ul><li>Request</li><li>Reply</li></ul> | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | IGMP | v1<ul><li>Membership Query</li><li>Membership Report</li></ul></br>v2<ul><li>Membership Query, General</li><li>Membership Query, Group-Specific</li><li>Membership Report</li><li>Leave Group</li></ul></br>v3<ul><li>Membership Query, General</li><li>Membership Query, Group-Specific</li><li>Membership Query, Group-and-Source-Specific</li><li>Membership Report</li><li>Leave Group</li></ul> | :x: | :white_check_mark: | :white_check_mark: |
 | Multicast |  | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| VXLAN | <ul><li>Vxlan - Inner ICMP</li><li>Vxlan - Inner UDP</li><li>Vxlan - Inner TCP</li></ul> | :white_check_mark: | :x: | :white_check_mark: |
+| VXLAN | <ul><li>Vxlan - Inner ICMP</li><li>Vxlan - Inner UDP</li><li>Vxlan - Inner TCP</li><li>Vxlan - Inner ARP</li></ul> | :white_check_mark: | :x: | :white_check_mark: |
 | Load PCAP File | Edit and replay<ul><li>All Packets</li><li>Specific IP flows</li><li>Specific Non-IP flows</li></ul></br>Replay the same pcap | :x: | :x: | :white_check_mark: |
 
 ## Usage
