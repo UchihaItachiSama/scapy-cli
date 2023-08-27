@@ -1341,7 +1341,16 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
         return None
     if fuzzy == 'y':
         if module != None and len(arp_inputs) != 0:
-            if module == 'ARP':
+            if module == 'VXLAN':
+                src_mac = sender_mac = RandMAC()._fix()
+                sender_ip = RandIP("172.16.0.0/12")._fix()
+                trgt_ip = RandIP("172.16.0.0/12")._fix()
+                if arp_type == "req":
+                    dst_mac = 'ff:ff:ff:ff:ff:ff'
+                    trgt_mac = '00:00:00:00:00:00'
+                elif arp_type == "resp":
+                    dst_mac = trgt_mac = RandMAC()._fix()
+            elif module == 'ARP':
                 src_mac = sender_mac = get_if_hwaddr(arp_inputs[1])
                 sender_ip = get_if_addr(arp_inputs[1])
                 ip_pattern = re.compile(r'^0\.0\.0\.0$')
@@ -1357,7 +1366,7 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
                 return None
     elif fuzzy == 'n':
         if module != None and len(arp_inputs) != 0:
-            if module == 'ARP':
+            if module == 'ARP' or module == 'VXLAN':
                 src_mac = arp_inputs[0]
                 sender_mac = arp_inputs[2]
                 sender_ip = arp_inputs[3]
@@ -1750,6 +1759,57 @@ def build_vxlan(msg_type):
             logger.critical(
                 "Invalid input '{}' Expected string (y/n)".format(fuzzy))
             return None
+    elif msg_type == 'VXLAN_ARP':
+        # Get input parameters
+        vxlan_input_param, common_param = requires("VXLAN")
+        arp_input_param, _ = requires('ARP')
+        inner_arp_pkt, vxlan_arp_pkt = None, None
+        fuzzy = (input("Generate random Vxlan ARP Packet? (y/n) > ").strip()).lower()
+        if fuzzy == 'y':
+            # Build inner ARP Packet
+            arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
+            inputs = []
+            # Common parameters
+            for i in range(0, len(common_param)):
+                inputs.insert(i, input("{} > ".format(common_param[i])))
+            inner_arp_pkt = arp_packet(fuzzy, 'VXLAN', arp_type, inputs)
+            # Generate outer Vxlan packet
+            vxlan_arp_pkt = vxlan_packet(fuzzy, inner_arp_pkt, inputs)
+            if inner_arp_pkt != None and vxlan_arp_pkt != None:
+                logger.info("Inner ARP packet built")
+                logger.info("VXLAN ARP packet built")
+                vxlan_arp_pkt.show()
+                return vxlan_arp_pkt, inputs[0], inputs[1]
+        elif fuzzy == 'n':
+            # Build inner ARP packet
+            arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
+            inputs = []
+            del arp_input_param[-1] # Skipping VLAN tag for inner ARP
+            for i in range(0, len(arp_input_param)):
+                temp_input = input("Inner {} > ".format(arp_input_param[i]))
+                inputs.insert(i, temp_input)
+            inner_arp_pkt = arp_packet(fuzzy, 'VXLAN', arp_type, inputs)
+            # Craft the outer Vxlan packet. Get vxlan input params
+            vxlan_inputs = []
+            for i in range(0, len(vxlan_input_param)):
+                temp_input = input("{} > ".format(vxlan_input_param[i]))
+                if "4789" in vxlan_input_param[i] and temp_input != True:
+                    temp_input = '4789'
+                vxlan_inputs.insert(i, temp_input)
+                # Common parameters
+            for j in range(0, len(common_param)):
+                i = i + 1
+                vxlan_inputs.insert(i, input("{} > ".format(common_param[j])))
+            vxlan_arp_pkt = vxlan_packet(fuzzy, inner_arp_pkt, vxlan_inputs)
+            if inner_arp_pkt != None and vxlan_arp_pkt != None:
+                logger.info("Inner ARP packet built")
+                logger.info("Vxlan ARP Packet built")
+                vxlan_arp_pkt.show()
+                return vxlan_arp_pkt, vxlan_inputs[7], vxlan_inputs[8]
+        else:
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            return None
     else:
         logger.critical("Invalid msg_type: '{}' provided.".format(msg_type))
         return None
@@ -1762,6 +1822,7 @@ def vxlan():
         1: 'Vxlan - Inner ICMP',
         2: 'Vxlan - Inner UDP',
         3: 'Vxlan - Inner TCP',
+        4: 'Vxlan - Inner ARP',
     }
     print('Packet Type:\n')
     for key in avail_vxlan_mods.keys():
@@ -1774,6 +1835,8 @@ def vxlan():
             return build_vxlan("VXLAN_UDP")
         elif msg_type == 3:
             return build_vxlan("VXLAN_TCP")
+        elif msg_type == 4:
+            return build_vxlan("VXLAN_ARP")
         else:
             logger.critical("Invalid msg_type, expected integer (1-3)")
             return None
