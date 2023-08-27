@@ -1,6 +1,8 @@
-# netpktgen
+# scapy-cli
 
-- [netpktgen](#netpktgen)
+An interactive CLI based packet generator script, developed using Python3 and Scapy. To quickly craft and send different protocol packets on a network interface.
+
+- [scapy-cli](#scapy-cli)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
     - [Manual Installation](#manual-installation)
@@ -33,7 +35,7 @@ sudo unzip scapy-2.4.5.zip
 cd /path-to/scapy-2.4.5/
 ```
 
-- Next copy the `byteosaurus_hex.py` script from this repo under the scapy directory and run it with sudo.
+- Next copy the `byteosaurus_hex.py` script from this repository under the scapy directory and run it with sudo.
 
 ```shell
 cp byteosaurus_hex.py /path-to/scapy-2.4.5/
