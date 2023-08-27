@@ -2,7 +2,7 @@
 
 #################################################################################################################
 # Yet another packet generator based on Scapy
-# For installation and usage see README https://github.com/UchihaItachiSama/netpktgen/blob/main/README.md
+# For installation and usage see README https://github.com/UchihaItachiSama/scapy-cli/blob/main/README.md
 #################################################################################################################
 
 #################################################################################################################
