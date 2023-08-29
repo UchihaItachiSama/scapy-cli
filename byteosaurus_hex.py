@@ -89,10 +89,12 @@ def build_icmp():
         icmp_type = (input("ICMP Type (req/reply) > ").strip()).lower()
         # Getting input parameters
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -111,6 +113,7 @@ def build_icmp():
             icmp_pkt = icmp_packet(fuzzy, 'ICMP', icmp_type, inputs)
         else:
             vlans = (inputs[5]).strip().split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -119,8 +122,11 @@ def build_icmp():
                 logger.critical(ValueError, exc_info=True)
                 return None
             icmp_pkt = icmp_packet(fuzzy, 'ICMP', icmp_type, inputs)
-            if icmp_pkt != None:
-                icmp_pkt = add_vlan(icmp_pkt, vlans)
+            cos = validate_cos(cos, vlans)
+            if icmp_pkt != None and cos !=  None:
+                icmp_pkt = add_vlan(icmp_pkt, vlans, cos)
+            else:
+                return None
         if icmp_pkt != None:
             logger.info("ICMP Packet built")
             icmp_pkt.show()
@@ -156,10 +162,12 @@ def build_arp():
     elif fuzzy == "n":
         arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -177,6 +185,7 @@ def build_arp():
             arp_pkt = arp_packet(fuzzy, 'ARP', arp_type, inputs)
         else:
             vlans = inputs[6].split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -185,8 +194,11 @@ def build_arp():
                 logger.critical(ValueError, exc_info=True)
                 return None
             arp_pkt = arp_packet(fuzzy, 'ARP', arp_type, inputs)
-            if arp_pkt != None:
-                arp_pkt = add_vlan(arp_pkt, vlans)
+            cos = validate_cos(cos, vlans)
+            if arp_pkt != None and cos != None:
+                arp_pkt = add_vlan(arp_pkt, vlans, cos)
+            else:
+                return None
         if arp_pkt != None:
             logger.info("ARP packet built")
             arp_pkt.show()
@@ -913,33 +925,62 @@ def build_mcast():
 
 
 #################################################################################################################
-def add_dot1q(vlan_list, layer):
+def add_dot1q(vlan_list, cos_list, layer):
     if (len(vlan_list) == 1):
-        dot1q = Dot1Q(vlan=vlan_list[0])
+        dot1q = Dot1Q(vlan=vlan_list[0], prio=cos_list[0])
         vlan_list.pop(0)
+        cos_list.pop(0)
         dot1q.add_payload(layer.payload)
         return dot1q
     else:
-        dot1q = Dot1Q(vlan=vlan_list[0], type=33024)
+        dot1q = Dot1Q(vlan=vlan_list[0], prio=cos_list[0], type=33024)
         vlan_list.pop(0)
-        dot1q.add_payload(add_dot1q(vlan_list, layer))
+        cos_list.pop(0)
+        dot1q.add_payload(add_dot1q(vlan_list, cos_list, layer))
         return dot1q
 
 
 #################################################################################################################
-def add_vlan(packet, vlans):
+def add_vlan(packet, vlans, cos):
     layer = packet.firstlayer()
     while not isinstance(layer, NoPayload):
         if 'chksum' in layer.default_fields:
             del layer.chksum
         if (type(layer) is Ether):
             layer.type = 33024
-            dot1q = add_dot1q(vlans, layer)
+            dot1q = add_dot1q(vlans, cos, layer)
             layer.remove_payload()
             layer.add_payload(dot1q)
             layer = dot1q
         layer = layer.payload
     return packet
+
+
+#################################################################################################################
+def validate_cos(cos, vlans):
+    if len(cos) > len(vlans):
+        logger.critical(
+            "Mismatched CoS and vlans input")
+        logger.critical(ValueError, exc_info=True)
+        return None
+    elif len(cos) <= len(vlans):
+        if len(cos) == 1 and cos[0] == "":
+            _ = cos.pop(0)
+        cos.extend( [0] * ( len(vlans) - len(cos) ) )
+        try:
+            cos = [int(i) for i in cos]
+        except ValueError:
+            logger.critical(
+                "Invalid CoS id'{}' Expected integer".format(cos))
+            logger.critical(ValueError, exc_info=True)
+            return None
+        if ( any( (i > 7) or (i < 0) for i in cos) ):
+            logger.critical(
+                "Invalid CoS values'{}' Expected value between 0 and 7".format(cos))
+            logger.critical(ValueError, exc_info=True)
+            return None
+        else:
+            return cos
 
 
 #################################################################################################################
