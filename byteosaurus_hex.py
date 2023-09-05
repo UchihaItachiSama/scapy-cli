@@ -273,10 +273,12 @@ def build_igmp(msg_type, version):
         input_param, common_param = requires("IGMP")
         del input_param[2:4]
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -300,6 +302,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[2].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -312,7 +315,11 @@ def build_igmp(msg_type, version):
                 if not (p[IGMP].igmpize()):
                     logger.critical("Failed building IGMPv1 Membership Query")
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv1 Membership Query Built")
             p.show()
             return p, inputs[3], inputs[4]
@@ -326,6 +333,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[2].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -338,7 +346,11 @@ def build_igmp(msg_type, version):
                 if not (p[IGMP].igmpize()):
                     logger.critical("Failed building IGMPv2 Membership Query")
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv2 Membership Query Built")
             p.show()
             return p, inputs[3], inputs[4]
@@ -352,6 +364,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[2].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -364,7 +377,11 @@ def build_igmp(msg_type, version):
                 if not (p[IGMPv3].igmpize()):
                     logger.critical("Failed building IGMPv3 Membership Query")
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv3 Membership Query Built")
             p.show()
             return p, inputs[3], inputs[4]
@@ -378,10 +395,12 @@ def build_igmp(msg_type, version):
         input_param, common_param = requires("IGMP")
         del input_param[3:4]
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -408,6 +427,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[3].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -422,7 +442,11 @@ def build_igmp(msg_type, version):
                         "Failed building IGMPv2 Membership Query, Group specific"
                     )
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv2 Membership Query, Group specific")
             p.show()
             return p, inputs[4], inputs[5]
@@ -437,6 +461,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[3].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -451,7 +476,11 @@ def build_igmp(msg_type, version):
                         "Failed building IGMPv3 Membership Query, Group specific"
                     )
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv3 Membership Query, Group specific")
             p.show()
             return p, inputs[4], inputs[5]
@@ -464,10 +493,12 @@ def build_igmp(msg_type, version):
         # Gettting the input parameters
         input_param, common_param = requires("IGMP")
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -500,6 +531,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[4].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -516,7 +548,11 @@ def build_igmp(msg_type, version):
                         "Failed building IGMPv3 Membership Query, Group & Source specific"
                     )
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv3 Membership Query, Group & Source specific")
             p.show()
             return p, inputs[5], inputs[6]
@@ -530,10 +566,12 @@ def build_igmp(msg_type, version):
         input_param, common_param = requires("IGMP")
         del input_param[3:4]
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -558,6 +596,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[3].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -570,7 +609,11 @@ def build_igmp(msg_type, version):
                 if not (p[IGMP].igmpize()):
                     logger.critical("Failed building IGMPv1 Membership Report")
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv1 Membership Report")
             p.show()
             return p, inputs[4], inputs[5]
@@ -584,6 +627,7 @@ def build_igmp(msg_type, version):
                     return None
             else:
                 vlans = inputs[3].split(",")
+                cos = (dot1q_prio[0]).strip().split(",")
                 try:
                     vlans = [int(i) for i in vlans]
                 except ValueError:
@@ -596,7 +640,11 @@ def build_igmp(msg_type, version):
                 if not (p[IGMP].igmpize()):
                     logger.critical("Failed building IGMPv2 Membership Report")
                     return None
-                p = add_vlan(p, vlans)
+                cos = validate_cos(cos, vlans)
+                if cos != None:
+                    p = add_vlan(p, vlans, cos)
+                else:
+                    return None
             logger.info("IGMPv2 Membership Report")
             p.show()
             return p, inputs[4], inputs[5]
@@ -609,11 +657,13 @@ def build_igmp(msg_type, version):
         # Gettting the input parameters
         input_param, common_param = requires("IGMP")
         inputs = []
+        dot1q_prio = []
         del input_param[2:4]
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
-                inputs.insert(i, input("VLAN Tag > "))
+                inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -641,6 +691,7 @@ def build_igmp(msg_type, version):
                 return None
         else:
             vlans = inputs[2].split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -655,7 +706,11 @@ def build_igmp(msg_type, version):
                     "Failed building IGMPv3 Membership Query, Group & Source specific"
                 )
                 return None
-            p = add_vlan(p, vlans)
+            cos = validate_cos(cos, vlans)
+            if cos != None:
+                p = add_vlan(p, vlans, cos)
+            else:
+                return None
         logger.info("IGMPv3 Membership Report")
         p.show()
         return p, inputs[3], inputs[4]
@@ -663,11 +718,13 @@ def build_igmp(msg_type, version):
         # Gettting the input parameters
         input_param, common_param = requires("IGMP")
         inputs = []
+        dot1q_prio = []
         del input_param[3:4]
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
-                inputs.insert(i, input("VLAN Tag > "))
+                inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -690,6 +747,7 @@ def build_igmp(msg_type, version):
                 return None
         else:
             vlans = inputs[3].split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -702,7 +760,11 @@ def build_igmp(msg_type, version):
             if not (p[IGMP].igmpize()):
                 logger.critical("Failed building IGMPv2 Leave Message")
                 return None
-            p = add_vlan(p, vlans)
+            cos = validate_cos(cos, vlans)
+            if cos != None:
+                p = add_vlan(p, vlans, cos)
+            else:
+                return None
         logger.info("IGMPv2 Leave Message")
         p.show()
         return p, inputs[4], inputs[5]
@@ -710,11 +772,13 @@ def build_igmp(msg_type, version):
         # Gettting the input parameters
         input_param, common_param = requires("IGMP")
         inputs = []
+        dot1q_prio = []
         del input_param[2:4]
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
-                inputs.insert(i, input("VLAN Tag > "))
+                inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -742,6 +806,7 @@ def build_igmp(msg_type, version):
                 return None
         else:
             vlans = inputs[2].split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -754,7 +819,11 @@ def build_igmp(msg_type, version):
             if not (p[IGMPv3].igmpize()):
                 logger.critical("Failed building IGMPv3 Leave Message")
                 return None
-            p = add_vlan(p, vlans)
+            cos = validate_cos(cos, vlans)
+            if cos != None:
+                p = add_vlan(p, vlans, cos)
+            else:
+                return None
         logger.info("IGMPv3 Leave Message")
         p.show()
         return p, inputs[3], inputs[4]
@@ -880,10 +949,12 @@ def build_mcast():
             return None
     elif fuzzy == "n":
         inputs = []
+        dot1q_prio = []
         for i in range(0, len(input_param)):
             temp_input = input("{} > ".format(input_param[i]))
             if "Tag" in input_param[i] and temp_input.lower() == "y":
                 inputs.insert(i, input("VLAN Tag (x,y) > "))
+                dot1q_prio.insert(0, input("CoS (x,y | default 0) > "))
             elif "Tag" in input_param[i] and temp_input.lower() == "n":
                 inputs.insert(i, False)
             elif "Tag" not in input_param[i]:
@@ -902,6 +973,7 @@ def build_mcast():
             udp_pkt = udp_packet(fuzzy, 'MCAST', inputs)
         else:
             vlans = (inputs[5]).strip().split(",")
+            cos = (dot1q_prio[0]).strip().split(",")
             try:
                 vlans = [int(i) for i in vlans]
             except ValueError:
@@ -910,8 +982,11 @@ def build_mcast():
                 logger.critical(ValueError, exc_info=True)
                 return None
             udp_pkt = udp_packet(fuzzy, 'MCAST', inputs)
-            if udp_pkt != None:
-                udp_pkt = add_vlan(udp_pkt, vlans)
+            cos = validate_cos(cos, vlans)
+            if udp_pkt != None and cos != None:
+                udp_pkt = add_vlan(udp_pkt, vlans, cos)
+            else:
+                return None
         if udp_pkt != None:
             logger.info("UDP Packet built")
             udp_pkt.show()
