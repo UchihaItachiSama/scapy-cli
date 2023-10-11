@@ -19,6 +19,7 @@ from os import urandom
 from random import randint
 from scapy.contrib.igmp import *
 from scapy.contrib.igmpv3 import *
+from scapy.contrib.mac_control import *
 import re
 import logging
 
@@ -60,6 +61,10 @@ def requires(module):
             "Outer Source MAC (de:ad:be:af:ca:fe)", "Outer Destination MAC",
             "Outer Source IP", "Outer Destination IP", "Outer UDP Source Port",
             "Outer UDP Destination Port (default 4789)", "VNI"
+        ],
+        "LLFC": [
+            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC (default: 01:80:c2:00:00:01)",
+            "Time in Quanta (0-65535)"
         ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
@@ -1932,9 +1937,111 @@ def vxlan():
 
 
 #################################################################################################################
+def flow_control_packet(fuzzy, module_type, module_inputs):
+    final_packet = None
+    if module_type not in ['LLFC', 'PFC']:
+        logger.critical(
+            "Invalid flow control type: '{}' Expected value (LLFC/PFC)".format(
+                module_type
+            )
+        )
+    if fuzzy == "y":
+        if module_type != None:
+            if module_type == 'LLFC':
+                src_mac, dst_mac = RandMAC()._fix(), MACControl.DEFAULT_DST_MAC
+                time_quanta = randint(0, 65535)
+            else:
+                return None
+        else:
+            return None
+    if fuzzy == "n":
+        if module_inputs != None:
+            if module_type == 'LLFC':
+                mac_pattern = re.compile(
+                    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+                # If no valid source mac provided get it from source interface
+                if mac_pattern.match(module_inputs[0].strip()):
+                    src_mac = module_inputs[0]
+                else:
+                    logger.error(
+                        "Invalid source MAC provided. Extracting source MAC from source interface."
+                    )
+                    src_mac = get_if_hwaddr(module_inputs[4])
+                # If no valid destination mac provided use default
+                if len(module_inputs[1].strip()) > 0:
+                    if mac_pattern.match(module_inputs[1].strip()):
+                        dst_mac = module_inputs[1]
+                    else:
+                        logger.error(
+                            "Invalid destination MAC provided. Using default MAC ({})".format(MACControl.DEFAULT_DST_MAC)
+                        )
+                        dst_mac = MACControl.DEFAULT_DST_MAC
+                elif len(module_inputs[1].strip()) == 0:
+                    dst_mac = MACControl.DEFAULT_DST_MAC
+                else:
+                    return None
+                try:
+                    time_quanta = int(module_inputs[2])
+                except ValueError:
+                    logger.critical(
+                        "Invalid input '{}' Expected integer (0-65535)".format(module_inputs[2]))
+                    logger.critical(ValueError, exc_info=True)
+                    return None
+                if time_quanta < 0 or time_quanta > 65535:
+                    logger.critical(
+                        "Invalid Quanta value provided '{}' Expected range (0-65535)".format(time_quanta))
+                    return None
+        else:
+            return None
+    if module_type == 'LLFC':
+        final_packet = Ether(src=src_mac, dst=dst_mac) / MACControlPause(pause_time=time_quanta)
+    return final_packet
+
+
+#################################################################################################################
+def build_llfc():
+    # Get input parameters
+    llfc_pkt = None
+    input_param, common_param = requires("LLFC")
+    fuzzy = (input("Random 802.3x Pause Frame? (y/n) > ").strip()).lower()
+    if fuzzy == "y":
+        inputs = []
+        # Common parameters
+        for i in range(0, len(common_param)):
+            inputs.insert(i, input("{} > ".format(common_param[i])))
+        llfc_pkt = flow_control_packet(fuzzy, 'LLFC', inputs)
+        if llfc_pkt != None:
+            logger.info("802.3x Pause Frame built")
+            llfc_pkt.show()
+            return llfc_pkt, inputs[0], inputs[1]
+        else:
+            return None
+    elif fuzzy == "n":
+        inputs = []
+        # Get input parameters
+        for i in range(0, len(input_param)):
+            inputs.insert(i, input("{} > ".format(input_param[i])))
+        # Common parameters
+        for j in range(0, len(common_param)):
+            i = i + 1
+            inputs.insert(i, input("{} > ".format(common_param[j])))
+        llfc_pkt = flow_control_packet(fuzzy, 'LLFC', inputs)
+        if llfc_pkt != None:
+            logger.info("802.3x Pause Frame built")
+            llfc_pkt.show()
+            return llfc_pkt, inputs[3], inputs[4]
+        else:
+            return None
+    else:
+        logger.critical(
+            "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+        return None
+
+
+#################################################################################################################
 def callModule(module_number):
     try:
-        if 1 <= module_number <= 5:
+        if 1 <= module_number <= 6:
             flow_arr = []
             flow_count = int(input("Enter the number of flows > ").strip())
             for index in range(0, flow_count):
@@ -1950,6 +2057,8 @@ def callModule(module_number):
                     flow_instance = build_mcast()
                 elif module_number == 5:
                     flow_instance = vxlan()
+                elif module_number == 6:
+                    flow_instance = build_llfc()
                 if flow_instance != None:
                     flow_arr.append(flow_instance)
             if len(flow_arr) > 0:
@@ -1958,7 +2067,7 @@ def callModule(module_number):
             else:
                 logger.info("No valid flows found to send.")
             del flow_arr
-        elif module_number == 6:
+        elif module_number == 7:
             _ = pcap_mod()
         else:
             logger.critical(
@@ -1979,8 +2088,9 @@ def print_menu():
         3: 'IGMP',
         4: 'Multicast',
         5: 'VXLAN',
-        6: 'Load PCAP File',
-        7: 'Exit',
+        6: 'Pause Frame',
+        7: 'Load PCAP File',
+        8: 'Exit',
     }
     print("\n" + '=' * 50)
     print('Scapy based packet generator')
@@ -2022,16 +2132,16 @@ logger = logging.getLogger(__name__)
 #################################################################################################################
 if __name__ == "__main__":
     call_mod = None
-    while (call_mod != 7):
+    while (call_mod != 8):
         print_menu()
         try:
-            call_mod = int((input("\nEnter your choice (1-7): ")).strip())
-            if 1 <= call_mod <= 6:
+            call_mod = int((input("\nEnter your choice (1-8): ")).strip())
+            if 1 <= call_mod <= 7:
                 callModule(call_mod)
-            elif call_mod == 7:
+            elif call_mod == 8:
                 logger.info("See you later, alligator!")
                 sys.exit(0)
             else:
-                logger.info('Invalid input. Please select a number (1-7)')
+                logger.info('Invalid input. Please select a number (1-8)')
         except ValueError:
-            logger.info('Invalid input. Please select a number (1-7)')
+            logger.info('Invalid input. Please select a number (1-8)')
