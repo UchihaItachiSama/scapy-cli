@@ -63,8 +63,7 @@ def requires(module):
             "Outer UDP Destination Port (default 4789)", "VNI"
         ],
         "LLFC": [
-            "Source MAC (de:ad:be:ef:ca:fe)", "Destination MAC (default: 01:80:c2:00:00:01)",
-            "Time in Quanta (0-65535)"
+            "Source MAC (de:ad:be:ef:ca:fe)", "Time in Quanta (0-65535)"
         ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
@@ -1945,54 +1944,38 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
                 module_type
             )
         )
+        return None
     if fuzzy == "y":
-        if module_type != None:
-            if module_type == 'LLFC':
-                src_mac, dst_mac = RandMAC()._fix(), MACControl.DEFAULT_DST_MAC
-                time_quanta = randint(0, 65535)
-            else:
-                return None
+        if module_type == 'LLFC':
+            src_mac, dst_mac = RandMAC()._fix(), MACControl.DEFAULT_DST_MAC
+            time_quanta = randint(0, 65535)
         else:
             return None
     if fuzzy == "n":
-        if module_inputs != None:
-            if module_type == 'LLFC':
-                mac_pattern = re.compile(
-                    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
-                # If no valid source mac provided get it from source interface
-                if mac_pattern.match(module_inputs[0].strip()):
-                    src_mac = module_inputs[0]
-                else:
-                    logger.error(
-                        "Invalid source MAC provided. Extracting source MAC from source interface."
-                    )
-                    src_mac = get_if_hwaddr(module_inputs[4])
-                # If no valid destination mac provided use default
-                if len(module_inputs[1].strip()) > 0:
-                    if mac_pattern.match(module_inputs[1].strip()):
-                        dst_mac = module_inputs[1]
-                    else:
-                        logger.error(
-                            "Invalid destination MAC provided. Using default MAC ({})".format(MACControl.DEFAULT_DST_MAC)
-                        )
-                        dst_mac = MACControl.DEFAULT_DST_MAC
-                elif len(module_inputs[1].strip()) == 0:
-                    dst_mac = MACControl.DEFAULT_DST_MAC
-                else:
-                    return None
-                try:
-                    time_quanta = int(module_inputs[2])
-                except ValueError:
-                    logger.critical(
-                        "Invalid input '{}' Expected integer (0-65535)".format(module_inputs[2]))
-                    logger.critical(ValueError, exc_info=True)
-                    return None
-                if time_quanta < 0 or time_quanta > 65535:
-                    logger.critical(
-                        "Invalid Quanta value provided '{}' Expected range (0-65535)".format(time_quanta))
-                    return None
-        else:
-            return None
+        if module_type == 'LLFC':
+            mac_pattern = re.compile(
+                r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+            # If no valid source mac provided get it from source interface
+            if mac_pattern.match(module_inputs[0].strip()):
+                src_mac = module_inputs[0]
+            else:
+                logger.error(
+                    "Invalid source MAC provided. Extracting source MAC from source interface."
+                )
+                src_mac = get_if_hwaddr(module_inputs[3])
+            # Destination MAC is well known reserved 01-80-C2-00-00-01
+            dst_mac = MACControl.DEFAULT_DST_MAC
+            try:
+                time_quanta = int(module_inputs[1])
+            except ValueError:
+                logger.critical(
+                    "Invalid input '{}' Expected integer (0-65535)".format(module_inputs[1]))
+                logger.critical(ValueError, exc_info=True)
+                return None
+            if time_quanta < 0 or time_quanta > 65535:
+                logger.critical(
+                    "Invalid Quanta value provided '{}' Expected range (0-65535)".format(time_quanta))
+                return None
     if module_type == 'LLFC':
         final_packet = Ether(src=src_mac, dst=dst_mac) / MACControlPause(pause_time=time_quanta)
     return final_packet
@@ -2029,7 +2012,7 @@ def build_llfc():
         if llfc_pkt != None:
             logger.info("802.3x Pause Frame built")
             llfc_pkt.show()
-            return llfc_pkt, inputs[3], inputs[4]
+            return llfc_pkt, inputs[2], inputs[3]
         else:
             return None
     else:
