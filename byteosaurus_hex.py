@@ -65,6 +65,10 @@ def requires(module):
         "LLFC": [
             "Source MAC (de:ad:be:ef:ca:fe)", "Time in Quanta (0-65535)"
         ],
+        "PFC": [
+            "Source MAC (de:ad:be:ef:ca:fe)", "Enable Pause for Class (C0-C7)",
+            "Time in Quanta for Class (0-65535)"
+        ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
     return req_arr[module], req_arr["common"]
@@ -1040,7 +1044,6 @@ def validate_cos(cos, vlans):
     if len(cos) > len(vlans):
         logger.critical(
             "Mismatched CoS and vlans input")
-        logger.critical(ValueError, exc_info=True)
         return None
     elif len(cos) <= len(vlans):
         if len(cos) == 1 and cos[0] == "":
@@ -1056,7 +1059,6 @@ def validate_cos(cos, vlans):
         if ( any( (i > 7) or (i < 0) for i in cos) ):
             logger.critical(
                 "Invalid CoS values'{}' Expected value between 0 and 7".format(cos))
-            logger.critical(ValueError, exc_info=True)
             return None
         else:
             return cos
@@ -1937,7 +1939,7 @@ def vxlan():
 
 #################################################################################################################
 def flow_control_packet(fuzzy, module_type, module_inputs):
-    final_packet = None
+    final_frame = None
     if module_type not in ['LLFC', 'PFC']:
         logger.critical(
             "Invalid flow control type: '{}' Expected value (LLFC/PFC)".format(
@@ -1949,6 +1951,30 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
         if module_type == 'LLFC':
             src_mac, dst_mac = RandMAC()._fix(), MACControl.DEFAULT_DST_MAC
             time_quanta = randint(0, 65535)
+        elif module_type == 'PFC':
+            src_mac, dst_mac = RandMAC()._fix(), MACControl.DEFAULT_DST_MAC
+            # Randomly set the CEV
+            class_enable_vector = [
+                random.choice([True, False]),  #C0
+                random.choice([True, False]),  #C1
+                random.choice([True, False]),  #C2
+                random.choice([True, False]),  #C3
+                random.choice([True, False]),  #C4
+                random.choice([True, False]),  #C5
+                random.choice([True, False]),  #C6
+                random.choice([True, False])   #C7
+            ]
+            # Randomly set pause time per class
+            class_pause_times = [
+                randint(1, 65535) if class_enable_vector[0] else 0,  #C0
+                randint(1, 65535) if class_enable_vector[1] else 0,  #C1
+                randint(1, 65535) if class_enable_vector[2] else 0,  #C2
+                randint(1, 65535) if class_enable_vector[3] else 0,  #C3
+                randint(1, 65535) if class_enable_vector[4] else 0,  #C4
+                randint(1, 65535) if class_enable_vector[5] else 0,  #C5
+                randint(1, 65535) if class_enable_vector[6] else 0,  #C6
+                randint(1, 65535) if class_enable_vector[7] else 0   #C7
+            ]
         else:
             return None
     if fuzzy == "n":
@@ -1976,9 +2002,76 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
                 logger.critical(
                     "Invalid Quanta value provided '{}' Expected range (0-65535)".format(time_quanta))
                 return None
+        elif module_type == 'PFC':
+            mac_pattern = re.compile(
+                r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+            # If no valid source mac provided get it from source interface
+            if mac_pattern.match(module_inputs[0].strip()):
+                src_mac = module_inputs[0]
+            else:
+                logger.error(
+                    "Invalid source MAC provided. Extracting source MAC from source interface."
+                )
+                src_mac = get_if_hwaddr(module_inputs[4])
+            # Destination MAC is well known reserved 01-80-C2-00-00-01
+            dst_mac = MACControl.DEFAULT_DST_MAC
+            cev_input = (module_inputs[1].strip()).split(",")
+            cev_input = [ x.strip().upper() for x in cev_input ]
+            quanta_input = (module_inputs[2].strip()).split(",")
+            quanta_input = [ x.strip().upper() for x in quanta_input ]
+            class_enable_vector, class_pause_times = validate_cev_quanta(cev_input, quanta_input)
+            if class_enable_vector == None or class_pause_times == None:
+                return None
     if module_type == 'LLFC':
-        final_packet = Ether(src=src_mac, dst=dst_mac) / MACControlPause(pause_time=time_quanta)
-    return final_packet
+        final_frame = Ether(src=src_mac, dst=dst_mac) / MACControlPause(pause_time=time_quanta)
+    elif module_type == 'PFC':
+        final_frame = Ether(src=src_mac, dst=dst_mac, type=0x8808)
+        pfc_opcode = 0x0101
+        cev_value = sum(2**i if class_enable_vector[i] else 0 for i in range(8))
+        class_pause_times_bytes = b''.join([time.to_bytes(2, byteorder='big') for time in class_pause_times])
+        pfc_payload = struct.pack("!H", pfc_opcode) + cev_value.to_bytes(2, byteorder='big') + class_pause_times_bytes
+        padding_length = 46 - len(pfc_payload)
+        padding = Padding(load=b'\x00' * padding_length)
+        final_frame = final_frame / pfc_payload / padding
+    return final_frame
+
+
+#################################################################################################################
+def validate_cev_quanta(cev, quanta):
+    class_names = [ 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7' ]
+    default_cev = [False] * 8
+    default_quanta = [0] * 8
+    if len(quanta) > len(cev):
+        logger.error(
+            "Mismatched Quanta and Class inputs")
+        return None, None
+    # Default if both inputs are empty
+    elif len(quanta) <= len(cev):
+        if (len(quanta) == 1 and len(cev) == 1) and (cev[0] == "" and quanta[0] == ""):
+            return  default_cev, default_quanta
+        for class_id in cev:
+            if class_id not in class_names:
+                logger.error(
+                    "Invalid Class value '{}' Expected value in range C0 - C7".format(class_id))
+                return None, None
+        if len(quanta) == 1 and quanta[0] == "":
+            _ = quanta.pop(0)
+        quanta.extend( [0] * ( len(cev) - len(quanta) ) )
+        try:
+            quanta = [int(i) for i in quanta]
+        except ValueError:
+            logger.critical(
+                "Invalid Quanta value '{}' Expected integer in range 0 - 65535".format(quanta))
+            logger.critical(ValueError, exc_info=True)
+            return None, None
+        if ( any( (i > 65535) or (i < 0) for i in quanta ) ):
+            logger.error(
+                "Invalid Quanta value '{}' Expected value in range 0 - 65535".format(quanta))
+            return None, None
+        for i in range(0, len(cev)):
+            default_cev[class_names.index(cev[i])] = True
+            default_quanta[class_names.index(cev[i])] = quanta[i]
+        return default_cev, default_quanta
 
 
 #################################################################################################################
@@ -2022,9 +2115,48 @@ def build_llfc():
 
 
 #################################################################################################################
+def build_pfc():
+    # Get input parameters
+    pfc_pkt = None
+    input_param, common_param = requires("PFC")
+    fuzzy = (input("Random 802.1Qbb PFC Frame? (y/n) > ").strip()).lower()
+    if fuzzy == "y":
+        inputs = []
+        # Common parameters
+        for i in range(0, len(common_param)):
+            inputs.insert(i, input("{} > ".format(common_param[i])))
+        pfc_pkt = flow_control_packet(fuzzy, 'PFC', inputs)
+        if pfc_pkt != None:
+            logger.info("802.1Qbb PFC Frame built")
+            pfc_pkt.show()
+            return pfc_pkt, inputs[0], inputs[1]
+        else:
+            return None
+    elif fuzzy == "n":
+        inputs = []
+        # Get inputs parameters
+        for i in range(0, len(input_param)):
+            inputs.insert(i, input("{} > ".format(input_param[i])))
+        for j in range(0, len(common_param)):
+            i = i + 1
+            inputs.insert(i, input("{} > ".format(common_param[j])))
+        pfc_pkt = flow_control_packet(fuzzy, 'PFC', inputs)
+        if pfc_pkt != None:
+            logger.info("802.1Qbb PFC Frame built")
+            pfc_pkt.show()
+            return pfc_pkt, inputs[3], inputs[4]
+        else:
+            return None
+    else:
+        logger.critical(
+            "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+        return None
+
+
+#################################################################################################################
 def callModule(module_number):
     try:
-        if 1 <= module_number <= 6:
+        if 1 <= module_number <= 7:
             flow_arr = []
             flow_count = int(input("Enter the number of flows > ").strip())
             for index in range(0, flow_count):
@@ -2042,6 +2174,8 @@ def callModule(module_number):
                     flow_instance = vxlan()
                 elif module_number == 6:
                     flow_instance = build_llfc()
+                elif module_number == 7:
+                    flow_instance = build_pfc()
                 if flow_instance != None:
                     flow_arr.append(flow_instance)
             if len(flow_arr) > 0:
@@ -2050,7 +2184,7 @@ def callModule(module_number):
             else:
                 logger.info("No valid flows found to send.")
             del flow_arr
-        elif module_number == 7:
+        elif module_number == 8:
             _ = pcap_mod()
         else:
             logger.critical(
@@ -2072,8 +2206,9 @@ def print_menu():
         4: 'Multicast',
         5: 'VXLAN',
         6: 'Pause Frame',
-        7: 'Load PCAP File',
-        8: 'Exit',
+        7: 'Priority Flow Control',
+        8: 'Load PCAP File',
+        9: 'Exit',
     }
     print("\n" + '=' * 50)
     print('Scapy based packet generator')
@@ -2115,16 +2250,16 @@ logger = logging.getLogger(__name__)
 #################################################################################################################
 if __name__ == "__main__":
     call_mod = None
-    while (call_mod != 8):
+    while (call_mod != 9):
         print_menu()
         try:
-            call_mod = int((input("\nEnter your choice (1-8): ")).strip())
-            if 1 <= call_mod <= 7:
+            call_mod = int((input("\nEnter your choice (1-9): ")).strip())
+            if 1 <= call_mod <= 8:
                 callModule(call_mod)
-            elif call_mod == 8:
+            elif call_mod == 9:
                 logger.info("See you later, alligator!")
                 sys.exit(0)
             else:
-                logger.info('Invalid input. Please select a number (1-8)')
+                logger.info('Invalid input. Please select a number (1-9)')
         except ValueError:
-            logger.info('Invalid input. Please select a number (1-8)')
+            logger.info('Invalid input. Please select a number (1-9)')
