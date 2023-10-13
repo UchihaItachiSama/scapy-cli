@@ -131,7 +131,7 @@ def build_icmp():
                 return None
             icmp_pkt = icmp_packet(fuzzy, 'ICMP', icmp_type, inputs)
             cos = validate_cos(cos, vlans)
-            if icmp_pkt != None and cos !=  None:
+            if icmp_pkt != None and cos != None:
                 icmp_pkt = add_vlan(icmp_pkt, vlans, cos)
             else:
                 return None
@@ -1042,21 +1042,19 @@ def add_vlan(packet, vlans, cos):
 #################################################################################################################
 def validate_cos(cos, vlans):
     if len(cos) > len(vlans):
-        logger.critical(
-            "Mismatched CoS and vlans input")
+        logger.critical("Mismatched CoS and vlans input")
         return None
     elif len(cos) <= len(vlans):
         if len(cos) == 1 and cos[0] == "":
             _ = cos.pop(0)
-        cos.extend( [0] * ( len(vlans) - len(cos) ) )
+        cos.extend([0] * (len(vlans) - len(cos)))
         try:
             cos = [int(i) for i in cos]
         except ValueError:
-            logger.critical(
-                "Invalid CoS id'{}' Expected integer".format(cos))
+            logger.critical("Invalid CoS id'{}' Expected integer".format(cos))
             logger.critical(ValueError, exc_info=True)
             return None
-        if ( any( (i > 7) or (i < 0) for i in cos) ):
+        if (any((i > 7) or (i < 0) for i in cos)):
             logger.critical(
                 "Invalid CoS values'{}' Expected value between 0 and 7".format(cos))
             return None
@@ -1876,7 +1874,7 @@ def build_vxlan(msg_type):
             # Build inner ARP packet
             arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
             inputs = []
-            del arp_input_param[-1] # Skipping VLAN tag for inner ARP
+            del arp_input_param[-1]  # Skipping VLAN tag for inner ARP
             for i in range(0, len(arp_input_param)):
                 temp_input = input("Inner {} > ".format(arp_input_param[i]))
                 inputs.insert(i, temp_input)
@@ -1943,9 +1941,7 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
     if module_type not in ['LLFC', 'PFC']:
         logger.critical(
             "Invalid flow control type: '{}' Expected value (LLFC/PFC)".format(
-                module_type
-            )
-        )
+                module_type))
         return None
     if fuzzy == "y":
         if module_type == 'LLFC':
@@ -2000,7 +1996,7 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
                 return None
             if time_quanta < 0 or time_quanta > 65535:
                 logger.critical(
-                    "Invalid Quanta value provided '{}' Expected range (0-65535)".format(time_quanta))
+                    "Invalid Quanta value provided '{}' Expected value in range (0-65535)".format(time_quanta))
                 return None
         elif module_type == 'PFC':
             mac_pattern = re.compile(
@@ -2016,9 +2012,9 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
             # Destination MAC is well known reserved 01-80-C2-00-00-01
             dst_mac = MACControl.DEFAULT_DST_MAC
             cev_input = (module_inputs[1].strip()).split(",")
-            cev_input = [ x.strip().upper() for x in cev_input ]
+            cev_input = [x.strip().upper() for x in cev_input]
             quanta_input = (module_inputs[2].strip()).split(",")
-            quanta_input = [ x.strip().upper() for x in quanta_input ]
+            quanta_input = [x.strip().upper() for x in quanta_input]
             class_enable_vector, class_pause_times = validate_cev_quanta(cev_input, quanta_input)
             if class_enable_vector == None or class_pause_times == None:
                 return None
@@ -2038,25 +2034,24 @@ def flow_control_packet(fuzzy, module_type, module_inputs):
 
 #################################################################################################################
 def validate_cev_quanta(cev, quanta):
-    class_names = [ 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7' ]
+    class_names = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7']
     default_cev = [False] * 8
     default_quanta = [0] * 8
     if len(quanta) > len(cev):
-        logger.error(
-            "Mismatched Quanta and Class inputs")
+        logger.error("Mismatched Quanta and Class inputs")
         return None, None
     # Default if both inputs are empty
     elif len(quanta) <= len(cev):
         if (len(quanta) == 1 and len(cev) == 1) and (cev[0] == "" and quanta[0] == ""):
-            return  default_cev, default_quanta
+            return default_cev, default_quanta
         for class_id in cev:
             if class_id not in class_names:
                 logger.error(
-                    "Invalid Class value '{}' Expected value in range C0 - C7".format(class_id))
+                    "Invalid Class value '{}' Expected comma separated values in range C0 - C7".format(class_id))
                 return None, None
         if len(quanta) == 1 and quanta[0] == "":
             _ = quanta.pop(0)
-        quanta.extend( [0] * ( len(cev) - len(quanta) ) )
+        quanta.extend([0] * (len(cev) - len(quanta)))
         try:
             quanta = [int(i) for i in quanta]
         except ValueError:
@@ -2064,7 +2059,7 @@ def validate_cev_quanta(cev, quanta):
                 "Invalid Quanta value '{}' Expected integer in range 0 - 65535".format(quanta))
             logger.critical(ValueError, exc_info=True)
             return None, None
-        if ( any( (i > 65535) or (i < 0) for i in quanta ) ):
+        if (any((i > 65535) or (i < 0) for i in quanta)):
             logger.error(
                 "Invalid Quanta value '{}' Expected value in range 0 - 65535".format(quanta))
             return None, None
@@ -2245,7 +2240,6 @@ hdlr.setFormatter(fmt)
 logging.root.addHandler(hdlr)
 logging.root.setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 
 #################################################################################################################
 if __name__ == "__main__":
