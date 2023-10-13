@@ -2,6 +2,8 @@
 
 An interactive CLI based packet generator script, developed using Python3 and Scapy. To quickly craft and send different protocol packets on a network interface.
 
+The primary purpose of this tool is for testing and troubleshooting only, and it is not intended for any malicious or harmful use.
+
 - [scapy-cli](#scapy-cli)
   - [Documentation](#documentation)
   - [Modules](#modules)
@@ -21,4 +23,6 @@ The script currently supports following packet generation modules
 | IGMP | v1<ul><li>Membership Query</li><li>Membership Report</li></ul></br>v2<ul><li>Membership Query, General</li><li>Membership Query, Group-Specific</li><li>Membership Report</li><li>Leave Group</li></ul></br>v3<ul><li>Membership Query, General</li><li>Membership Query, Group-Specific</li><li>Membership Query, Group-and-Source-Specific</li><li>Membership Report</li><li>Leave Group</li></ul> | :x: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Multicast |  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | VXLAN | <ul><li>Vxlan - Inner ICMP</li><li>Vxlan - Inner UDP</li><li>Vxlan - Inner TCP</li><li>Vxlan - Inner ARP</li></ul> | :white_check_mark: | :x: | :white_check_mark: | :x: |
+| Pause Frame</br>(802.3x) |  | :white_check_mark: | :x: | :white_check_mark: | :x: |
+| Priority Flow Control</br>(802.1Qbb) |  | :white_check_mark: | :x: | :white_check_mark: | :x: |
 | Load PCAP File | Edit and replay<ul><li>All Packets</li><li>Specific IP flows</li><li>Specific Non-IP flows</li></ul></br>Replay the same pcap | :x: | :x: | :white_check_mark: | :x: |
