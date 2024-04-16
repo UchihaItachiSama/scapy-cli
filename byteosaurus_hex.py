@@ -20,6 +20,7 @@ from random import randint
 from scapy.contrib.igmp import *
 from scapy.contrib.igmpv3 import *
 from scapy.contrib.mac_control import *
+from scapy.contrib.mpls import *
 import re
 import logging
 
@@ -68,6 +69,10 @@ def requires(module):
         "PFC": [
             "Source MAC (de:ad:be:ef:ca:fe)", "Enable Pause for Class (C0-C7)",
             "Time in Quanta for Class (0-65535)"
+        ],
+        "MPLS": [
+            "Outer Source MAC (de:ad:be:af:ca:fe)", "Outer Destination MAC",
+            "Labels in comma delimited form (Top to Bottom)", "Codeword (y/n)"
         ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
@@ -1431,7 +1436,7 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
         return None
     if fuzzy == 'y':
         if module != None and len(arp_inputs) != 0:
-            if module == 'VXLAN':
+            if module == 'VXLAN' or module  == 'MPLS':
                 src_mac = sender_mac = RandMAC()._fix()
                 sender_ip = RandIP("172.16.0.0/12")._fix()
                 trgt_ip = RandIP("172.16.0.0/12")._fix()
@@ -1456,7 +1461,7 @@ def arp_packet(fuzzy, module, arp_type, arp_inputs):
                 return None
     elif fuzzy == 'n':
         if module != None and len(arp_inputs) != 0:
-            if module == 'ARP' or module == 'VXLAN':
+            if module == 'ARP' or module == 'VXLAN' or module == 'MPLS':
                 src_mac = arp_inputs[0]
                 sender_mac = arp_inputs[2]
                 sender_ip = arp_inputs[3]
@@ -1495,6 +1500,10 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 ttl = randint(10, 255)
+            if module == 'MPLS':
+                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
+                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
+                ttl = randint(10, 255)
             elif module == 'ICMP':
                 src_mac, dst_mac = get_if_hwaddr(icmp_inputs[1]), RandMAC()._fix()
                 src_ip, dst_ip = get_if_addr(icmp_inputs[1]), RandIP("172.16.0.0/12")._fix()
@@ -1508,7 +1517,11 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
             return None
     elif fuzzy == 'n':
         if module != None and len(icmp_inputs) != 0:
-            if module == 'VXLAN':
+            if module == 'VXLAN': #Why are we not checking validity of MACs/IPs here
+                src_mac, dst_mac = icmp_inputs[0], icmp_inputs[1]
+                src_ip, dst_ip = icmp_inputs[2], icmp_inputs[3]
+                ttl = int(icmp_inputs[4])
+            if module == 'MPLS':
                 src_mac, dst_mac = icmp_inputs[0], icmp_inputs[1]
                 src_ip, dst_ip = icmp_inputs[2], icmp_inputs[3]
                 ttl = int(icmp_inputs[4])
@@ -1561,6 +1574,10 @@ def udp_packet(fuzzy, module, udp_inputs):
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 udp_dport = udp_sport = randint(49152, 65535)
+            elif module == 'MPLS':
+                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
+                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
+                udp_dport = udp_sport = randint(49152, 65535)
             elif module == 'MCAST':
                 src_mac, src_ip = get_if_hwaddr(udp_inputs[1]), get_if_addr(udp_inputs[1])
                 ip_pattern = re.compile(r'^0\.0\.0\.0$')
@@ -1574,6 +1591,10 @@ def udp_packet(fuzzy, module, udp_inputs):
     elif fuzzy == 'n':
         if module != None and len(udp_inputs) != 0:
             if module == 'VXLAN':
+                src_mac, dst_mac = udp_inputs[0], udp_inputs[1]
+                src_ip, dst_ip = udp_inputs[2], udp_inputs[3]
+                udp_sport, udp_dport = int(udp_inputs[4]), int(udp_inputs[5])
+            elif module == 'MPLS':
                 src_mac, dst_mac = udp_inputs[0], udp_inputs[1]
                 src_ip, dst_ip = udp_inputs[2], udp_inputs[3]
                 udp_sport, udp_dport = int(udp_inputs[4]), int(udp_inputs[5])
@@ -1630,11 +1651,19 @@ def tcp_packet(fuzzy, module, tcp_inputs):
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 tcp_sport, tcp_dport = RandShort()._fix(), RandShort()
+            elif module == 'MPLS':
+                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
+                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
+                tcp_sport, tcp_dport = RandShort()._fix(), RandShort()
         else:
             return None
     elif fuzzy == 'n':
         if module != None and len(tcp_inputs) != 0:
             if module == 'VXLAN':
+                src_mac, dst_mac = tcp_inputs[0], tcp_inputs[1]
+                src_ip, dst_ip = tcp_inputs[2], tcp_inputs[3],
+                tcp_sport, tcp_dport = int(tcp_inputs[4]), int(tcp_inputs[5])
+            if module == 'MPLS':
                 src_mac, dst_mac = tcp_inputs[0], tcp_inputs[1]
                 src_ip, dst_ip = tcp_inputs[2], tcp_inputs[3],
                 tcp_sport, tcp_dport = int(tcp_inputs[4]), int(tcp_inputs[5])
@@ -1933,7 +1962,388 @@ def vxlan():
     except ValueError:
         logger.critical("Invalid msg_type, expected integer (1-3)")
         return None
+#################################################################################################################
+def mpls_packet(fuzzy, inner_pkt, mpls_inputs): #TTL and cos value of labels are always set to 255 and 0 respectively
+    final_pkt = None
+    mpls_headers = None
+    if fuzzy == 'y':
+        mpls_labels_list = None
+        mpls_label_count = 0
+        if inner_pkt != None and len(mpls_inputs) != 0:
+            outer_dst_mac, outer_src_mac = RandMAC()._fix(), get_if_hwaddr(mpls_inputs[1])
+            #Number of labels
+            mpls_label_count = int((input("No. of MPLS labels (maximum = 10) > ").strip()).lower())
+            if mpls_label_count == 1:
+                mpls_headers = MPLS(label=randint(16, 1048575), cos=0, s=1, ttl=255) # MPLS labels 0-15 are reserved, max MPLS label = 2^20 - 1
+            elif 2 <= mpls_label_count <= 10:
+                mpls_headers = MPLS(label=randint(16, 1048575), cos=0, s=0, ttl=255) 
+                for i in range(1, mpls_label_count):
+                    bos=0 #bottom_of_stack logic
+                    if i==mpls_label_count-1:
+                        bos=1
+                    mpls_headers = mpls_headers / MPLS(label=randint(16, 1048575), cos=0, s=bos, ttl=255)                       
+            else:
+                logger.critical("Invalid input '{}' Expected value <= 10".format(mpls_label_count))
+                return None
+        else:
+            return None  
+        final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / inner_pkt #Skipping Codeword for random packet generation
+        return final_pkt          
+    elif fuzzy == 'n':
+        mpls_labels_list = None
+        mpls_label_count = 0
+        if inner_pkt != None and len(mpls_inputs) != 0:
+            outer_dst_mac = mpls_inputs[1]
+            # If no valid outer source mac provided pull from source interface
+            mac_pattern = re.compile(
+                r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+            if mac_pattern.match(mpls_inputs[0].strip()):
+                outer_src_mac = mpls_inputs[0]
+            else:
+                outer_src_mac = get_if_hwaddr(mpls_inputs[5])
+            mpls_labels_list = mpls_inputs[2]
+            mpls_label_count = len(mpls_labels_list)
+            if mpls_label_count == 1:
+                mpls_headers = MPLS(label=int(mpls_labels_list[0]), cos=0, s=1, ttl=255)
+            elif mpls_label_count >= 2 :
+                mpls_headers = MPLS(label=int(mpls_labels_list[0]), cos=0, s=0, ttl=255) 
+                for i in range(1, mpls_label_count):
+                    bos=0 #bottom_of_stack logic
+                    if i==mpls_label_count-1:
+                        bos=1
+                    mpls_headers = mpls_headers / MPLS(label=int(mpls_labels_list[i]), cos=0, s=bos, ttl=255)
+        else:
+            return None
+        #PW Codeword logic
+        if mpls_inputs[3] is True:
+            final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / EoMCW(zero=0, reserved=0, seq=0) / inner_pkt
+        else:
+            final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / inner_pkt
+        return final_pkt  
 
+#################################################################################################################
+def build_mpls(msg_type):
+    if msg_type == 'MPLS_ICMP':
+        # Get input parameters
+        mpls_input_param, common_param = requires("MPLS")
+        icmp_input_param, _ = requires('ICMP') 
+        inner_icmp_pkt, mpls_icmp_pkt = None, None
+        fuzzy = (input("Generate random MPLS ICMP Packet? (y/n) > ").strip()).lower()
+        if fuzzy == 'y':
+            # Build the inner ICMP packet
+            icmp_type = (input("ICMP Type (req/reply) > ").strip()).lower()
+            inputs = []
+            # Common parameters
+            for i in range(0, len(common_param)):
+                inputs.insert(i, input("{} > ".format(common_param[i])))
+            inner_icmp_pkt = icmp_packet(fuzzy, 'MPLS', icmp_type, inputs)
+            # Generate the Mpls packet
+            mpls_icmp_pkt = mpls_packet(fuzzy, inner_icmp_pkt, inputs) 
+            if inner_icmp_pkt != None and mpls_icmp_pkt != None:
+                logger.info("Inner ICMP packet built")
+                logger.info("MPLS ICMP Packet built")
+                mpls_icmp_pkt.show() 
+                return mpls_icmp_pkt, inputs[0], inputs[1]
+            else:
+                return None  
+        elif fuzzy == 'n':
+            labels = None
+            icmp_type = (input("ICMP Type (req/reply) > ").strip()).lower()
+            # Getting input parameters
+            inputs = []
+            del icmp_input_param[-1]  # Skipping VLAN tag for inner ICMP
+            for i in range(0, len(icmp_input_param)):
+                temp_input = input("Inner {} > ".format(icmp_input_param[i]))
+                inputs.insert(i, temp_input)
+            inner_icmp_pkt = icmp_packet(fuzzy, 'MPLS', icmp_type, inputs)
+            # Craft the MPLS packet. Get mpls input parameters
+            mpls_inputs = []
+            for i in range(0, len(mpls_input_param)):
+                temp_input = input("{} > ".format(mpls_input_param[i]))
+                if "Labels" in mpls_input_param[i]:
+                    #using a list comprehension with dummy variable x to create a list from the labels (which was a string)
+                    labels = [x.strip() for x in temp_input.split(',')]
+                    for k in range(0, len(labels)):
+                        try:
+                            if (0 <= int(labels[k]) <= 1048575) is True: #max MPLS label = 2^20
+                                continue
+                        except ValueError:
+                            logger.error(
+                                "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
+                            return None                  
+                    mpls_inputs.insert(i,labels)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                    mpls_inputs.insert(i, True)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                    mpls_inputs.insert(i, False)
+                elif "Codeword" not in mpls_input_param[i]:
+                    mpls_inputs.insert(i, temp_input)
+                else:
+                    logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                    return None 
+            # Common parameters
+            for j in range(0, len(common_param)):
+                i = i + 1
+                mpls_inputs.insert(i, input("{} > ".format(common_param[j])))
+            mpls_icmp_pkt = mpls_packet(fuzzy, inner_icmp_pkt, mpls_inputs)
+            if inner_icmp_pkt != None and mpls_icmp_pkt != None:
+                logger.info("Inner ICMP packet built")
+                logger.info("MPLS ICMP Packet built")
+                mpls_icmp_pkt.show()
+                return mpls_icmp_pkt, mpls_inputs[4], mpls_inputs[5]
+            else:
+                return None
+        else:
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            return None     
+    elif msg_type == 'MPLS_UDP':
+        # Get input parameters
+        mpls_input_param, common_param = requires("MPLS")
+        udp_input_param, _ = requires("UDP")
+        inner_udp_pkt, mpls_udp_pkt = None, None
+        fuzzy = (input("Generate random MPLS UDP Packet? (y/n) > ").strip()).lower()
+        if fuzzy == 'y':
+            # Build the inner UDP packet
+            # Common parameters
+            inputs = []
+            for i in range(0, len(common_param)):
+                inputs.insert(i, input("{} > ".format(common_param[i])))
+            inner_udp_pkt = udp_packet(fuzzy, 'MPLS', None)
+            # Generate the Mpls packet
+            mpls_udp_pkt = mpls_packet(fuzzy, inner_udp_pkt, inputs) 
+            if inner_udp_pkt != None and mpls_udp_pkt != None:
+                logger.info("Inner UDP packet built")
+                logger.info("MPLS UDP Packet built")
+                mpls_udp_pkt.show() 
+                return mpls_udp_pkt, inputs[0], inputs[1]
+            else:
+                return None  
+        elif fuzzy == 'n':
+            labels = None
+            # Getting input parameters
+            inputs = []
+            del udp_input_param[-1]  # Skipping VLAN Tag for inner UDP
+            for i in range(0, len(udp_input_param)):
+                temp_input = input("Inner {} > ".format(udp_input_param[i]))
+                inputs.insert(i, temp_input)
+            inner_udp_pkt = udp_packet(fuzzy, 'MPLS', inputs)
+            # Craft the MPLS packet. Get mpls input parameters
+            mpls_inputs = []
+            for i in range(0, len(mpls_input_param)):
+                temp_input = input("{} > ".format(mpls_input_param[i]))
+                if "Labels" in mpls_input_param[i]:
+                    #using a list comprehension with dummy variable x to create a list out of the labels (which was a string)
+                    labels = [x.strip() for x in temp_input.split(',')]
+                    for k in range(0, len(labels)):
+                        try:
+                            if (0 <= int(labels[k]) <= 1048575) is True: #max MPLS label = 2^20
+                                continue
+                        except ValueError:
+                            logger.error(
+                                "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
+                            return None                  
+                    mpls_inputs.insert(i,labels)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                    mpls_inputs.insert(i, True)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                    mpls_inputs.insert(i, False)
+                elif "Codeword" not in mpls_input_param[i]:
+                    mpls_inputs.insert(i, temp_input)
+                else:
+                    logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                    return None 
+            # Common parameters
+            for j in range(0, len(common_param)):
+                i = i + 1
+                mpls_inputs.insert(i, input("{} > ".format(common_param[j])))
+            mpls_udp_pkt = mpls_packet(fuzzy, inner_udp_pkt, mpls_inputs)
+            if inner_udp_pkt != None and mpls_udp_pkt != None:
+                logger.info("Inner UDP packet built")
+                logger.info("MPLS UDP Packet built")
+                mpls_udp_pkt.show()
+                return mpls_udp_pkt, mpls_inputs[4], mpls_inputs[5]
+            else:
+                return None
+        else:
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            return None       
+    elif msg_type == 'MPLS_TCP':
+        # Get input parameters
+        mpls_input_param, common_param = requires("MPLS")
+        tcp_input_param, _ = requires("TCP")
+        inner_tcp_pkt, mpls_tcp_pkt = None, None
+        fuzzy = (input("Generate random MPLS TCP Packet? (y/n) > ").strip()).lower()
+        if fuzzy == 'y':
+            # Build the inner TCP packet
+            # Common parameters
+            inputs = []
+            for i in range(0, len(common_param)):
+                inputs.insert(i, input("{} > ".format(common_param[i])))
+            inner_tcp_pkt = tcp_packet(fuzzy, 'MPLS', None)
+            # Generate the Mpls packet
+            mpls_tcp_pkt = mpls_packet(fuzzy, inner_tcp_pkt, inputs) 
+            if inner_tcp_pkt != None and mpls_tcp_pkt != None:
+                logger.info("Inner TCP packet built")
+                logger.info("MPLS TCP Packet built")
+                mpls_tcp_pkt.show() 
+                return mpls_tcp_pkt, inputs[0], inputs[1]
+            else:
+                return None  
+        elif fuzzy == 'n':
+            labels = None
+            # Getting input parameters
+            inputs = []
+            del tcp_input_param[-1]  # Skipping VLAN Tag for inner UDP
+            for i in range(0, len(tcp_input_param)):
+                temp_input = input("Inner {} > ".format(tcp_input_param[i]))
+                inputs.insert(i, temp_input)
+            inner_tcp_pkt = tcp_packet(fuzzy, 'MPLS', inputs)
+            # Craft the MPLS packet. Get mpls input parameters
+            mpls_inputs = []
+            for i in range(0, len(mpls_input_param)):
+                temp_input = input("{} > ".format(mpls_input_param[i]))
+                if "Labels" in mpls_input_param[i]:
+                    #using a list comprehension with dummy variable x to create a list out of the labels (which was a string)
+                    labels = [x.strip() for x in temp_input.split(',')]
+                    for k in range(0, len(labels)):
+                        try:
+                            if (0 <= int(labels[k]) <= 1048575) is True: #max MPLS label = 2^20
+                                continue
+                        except ValueError:
+                            logger.error(
+                                "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
+                            return None                  
+                    mpls_inputs.insert(i,labels)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                    mpls_inputs.insert(i, True)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                    mpls_inputs.insert(i, False)
+                elif "Codeword" not in mpls_input_param[i]:
+                    mpls_inputs.insert(i, temp_input)
+                else:
+                    logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                    return None 
+            # Common parameters
+            for j in range(0, len(common_param)):
+                i = i + 1
+                mpls_inputs.insert(i, input("{} > ".format(common_param[j])))
+            mpls_tcp_pkt = mpls_packet(fuzzy, inner_tcp_pkt, mpls_inputs)
+            if inner_tcp_pkt != None and mpls_tcp_pkt != None:
+                logger.info("Inner TCP packet built")
+                logger.info("MPLS TCP Packet built")
+                mpls_tcp_pkt.show()
+                return mpls_tcp_pkt, mpls_inputs[4], mpls_inputs[5]
+            else:
+                return None
+        else:
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            return None
+    elif msg_type == 'MPLS_ARP':
+        # Get input parameters
+        mpls_input_param, common_param = requires("MPLS")
+        arp_input_param, _ = requires('ARP')
+        inner_arp_pkt, mpls_arp_pkt = None, None
+        fuzzy = (input("Generate random MPLS ARP Packet? (y/n) > ").strip()).lower()
+        if fuzzy == 'y':
+            # Build inner ARP Packet
+            arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
+            inputs = []
+            # Common parameters
+            for i in range(0, len(common_param)):
+                inputs.insert(i, input("{} > ".format(common_param[i])))
+            inner_arp_pkt = arp_packet(fuzzy, 'MPLS', arp_type, inputs)
+            # Generate MPLS packet
+            mpls_arp_pkt = mpls_packet(fuzzy, inner_arp_pkt, inputs)
+            if inner_arp_pkt != None and mpls_arp_pkt != None:
+                logger.info("Inner ARP packet built")
+                logger.info("MPLS ARP packet built")
+                mpls_arp_pkt.show()
+                return mpls_arp_pkt, inputs[0], inputs[1]
+        elif fuzzy == 'n':
+            # Build inner ARP packet
+            arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
+            inputs = []
+            del arp_input_param[-1]  # Skipping VLAN tag for inner ARP
+            if arp_type == 'req':
+                del arp_input_param[-2] #skipping Target MAC
+                del arp_input_param[-4] #skipping Destination MAC - These are known for ARP request 
+            for i in range(0, len(arp_input_param)):
+                temp_input = input("Inner {} > ".format(arp_input_param[i]))
+                inputs.insert(i, temp_input)
+            inner_arp_pkt = arp_packet(fuzzy, 'MPLS', arp_type, inputs)
+            # Craft the MPLS packet. Get mpls input params
+            mpls_inputs = []
+            for i in range(0, len(mpls_input_param)):
+                temp_input = input("{} > ".format(mpls_input_param[i]))
+                if "Labels" in mpls_input_param[i]:
+                    #using a list comprehension with dummy variable x to create a list out of the labels (which was a string)
+                    labels = [x.strip() for x in temp_input.split(',')] 
+                    for k in range(0, len(labels)):
+                        try:
+                            if (0 <= int(labels[k]) <= 1048575) is True: #max MPLS label = 2^20
+                                continue
+                        except ValueError:
+                            logger.error(
+                                "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
+                            return None                  
+                    mpls_inputs.insert(i,labels)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                    mpls_inputs.insert(i, True)
+                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                    mpls_inputs.insert(i, False)
+                elif "Codeword" not in mpls_input_param[i]:
+                    mpls_inputs.insert(i, temp_input)
+                else:
+                    logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
+                    return None 
+            # Common parameters
+            for j in range(0, len(common_param)):
+                i = i + 1
+                mpls_inputs.insert(i, input("{} > ".format(common_param[j])))
+            mpls_arp_pkt = mpls_packet(fuzzy, inner_arp_pkt, mpls_inputs)
+            if inner_arp_pkt != None and mpls_arp_pkt != None:
+                logger.info("Inner ARP packet built")
+                logger.info("MPLS ARP Packet built")
+                mpls_arp_pkt.show()
+                return mpls_arp_pkt, mpls_inputs[4], mpls_inputs[5]
+        else:
+            logger.critical(
+                "Invalid input '{}' Expected string (y/n)".format(fuzzy))
+            return None
+    else:
+        logger.critical("Invalid msg_type: '{}' provided.".format(msg_type))
+        return None
+
+#################################################################################################################
+def mpls():
+    avail_mpls_modules = {
+        1: 'MPLS - Inner ICMP',
+        2: 'MPLS - Inner UDP',
+        3: 'MPLS - Inner TCP',
+        4: 'MPLS - Inner ARP',
+    }
+    print('Packet Type:\n')
+    for key in avail_mpls_modules.keys():
+        print(key, '--', avail_mpls_modules[key])
+    try:
+        msg_type = int(input("\nEnter your choice (1-4) > ").strip())
+        if msg_type == 1:
+            return build_mpls("MPLS_ICMP")
+        elif msg_type == 2:
+            return build_mpls("MPLS_UDP")
+        elif msg_type == 3:
+            return build_mpls("MPLS_TCP")
+        elif msg_type == 4:
+            return build_mpls("MPLS_ARP")
+        else:
+            logger.critical("Invalid msg_type, expected integer (1-4)")
+            return None
+    except ValueError:
+        logger.critical("Invalid msg_type, expected integer (1-4)")
+        return None
 
 #################################################################################################################
 def flow_control_packet(fuzzy, module_type, module_inputs):
@@ -2151,7 +2561,7 @@ def build_pfc():
 #################################################################################################################
 def callModule(module_number):
     try:
-        if 1 <= module_number <= 7:
+        if 1 <= module_number <= 8:
             flow_arr = []
             flow_count = int(input("Enter the number of flows > ").strip())
             for index in range(0, flow_count):
@@ -2171,6 +2581,8 @@ def callModule(module_number):
                     flow_instance = build_llfc()
                 elif module_number == 7:
                     flow_instance = build_pfc()
+                elif module_number == 8:
+                    flow_instance = mpls()
                 if flow_instance != None:
                     flow_arr.append(flow_instance)
             if len(flow_arr) > 0:
@@ -2179,7 +2591,7 @@ def callModule(module_number):
             else:
                 logger.info("No valid flows found to send.")
             del flow_arr
-        elif module_number == 8:
+        elif module_number == 9:
             _ = pcap_mod()
         else:
             logger.critical(
@@ -2202,8 +2614,9 @@ def print_menu():
         5: 'VXLAN',
         6: 'Pause Frame',
         7: 'Priority Flow Control',
-        8: 'Load PCAP File',
-        9: 'Exit',
+        8: 'MPLS',
+        9: 'Load PCAP File',
+        10: 'Exit',
     }
     print("\n" + '=' * 50)
     print('Scapy based packet generator')
@@ -2244,16 +2657,16 @@ logger = logging.getLogger(__name__)
 #################################################################################################################
 if __name__ == "__main__":
     call_mod = None
-    while (call_mod != 9):
+    while (call_mod != 10):
         print_menu()
         try:
-            call_mod = int((input("\nEnter your choice (1-9): ")).strip())
-            if 1 <= call_mod <= 8:
+            call_mod = int((input("\nEnter your choice (1-10): ")).strip())
+            if 1 <= call_mod <= 9:
                 callModule(call_mod)
-            elif call_mod == 9:
+            elif call_mod == 10:
                 logger.info("See you later, alligator!")
                 sys.exit(0)
             else:
-                logger.info('Invalid input. Please select a number (1-9)')
+                logger.info('Invalid input. Please select a number (1-10)')
         except ValueError:
-            logger.info('Invalid input. Please select a number (1-9)')
+            logger.info('Invalid input. Please select a number (1-10)')
