@@ -1496,11 +1496,7 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
         return None
     if fuzzy == 'y':
         if module != None:
-            if module == 'VXLAN':
-                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
-                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
-                ttl = randint(10, 255)
-            if module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS':
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 ttl = randint(10, 255)
@@ -1517,11 +1513,7 @@ def icmp_packet(fuzzy, module, icmp_type, icmp_inputs):
             return None
     elif fuzzy == 'n':
         if module != None and len(icmp_inputs) != 0:
-            if module == 'VXLAN': #Why are we not checking validity of MACs/IPs here
-                src_mac, dst_mac = icmp_inputs[0], icmp_inputs[1]
-                src_ip, dst_ip = icmp_inputs[2], icmp_inputs[3]
-                ttl = int(icmp_inputs[4])
-            if module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS': #Why are we not checking validity of MACs/IPs here
                 src_mac, dst_mac = icmp_inputs[0], icmp_inputs[1]
                 src_ip, dst_ip = icmp_inputs[2], icmp_inputs[3]
                 ttl = int(icmp_inputs[4])
@@ -1570,11 +1562,7 @@ def udp_packet(fuzzy, module, udp_inputs):
     final_packet = None
     if fuzzy == 'y':
         if module != None:
-            if module == 'VXLAN':
-                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
-                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
-                udp_dport = udp_sport = randint(49152, 65535)
-            elif module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS':
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 udp_dport = udp_sport = randint(49152, 65535)
@@ -1590,11 +1578,7 @@ def udp_packet(fuzzy, module, udp_inputs):
             return None
     elif fuzzy == 'n':
         if module != None and len(udp_inputs) != 0:
-            if module == 'VXLAN':
-                src_mac, dst_mac = udp_inputs[0], udp_inputs[1]
-                src_ip, dst_ip = udp_inputs[2], udp_inputs[3]
-                udp_sport, udp_dport = int(udp_inputs[4]), int(udp_inputs[5])
-            elif module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS':
                 src_mac, dst_mac = udp_inputs[0], udp_inputs[1]
                 src_ip, dst_ip = udp_inputs[2], udp_inputs[3]
                 udp_sport, udp_dport = int(udp_inputs[4]), int(udp_inputs[5])
@@ -1659,11 +1643,7 @@ def tcp_packet(fuzzy, module, tcp_inputs):
             return None
     elif fuzzy == 'n':
         if module != None and len(tcp_inputs) != 0:
-            if module == 'VXLAN':
-                src_mac, dst_mac = tcp_inputs[0], tcp_inputs[1]
-                src_ip, dst_ip = tcp_inputs[2], tcp_inputs[3],
-                tcp_sport, tcp_dport = int(tcp_inputs[4]), int(tcp_inputs[5])
-            if module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS':
                 src_mac, dst_mac = tcp_inputs[0], tcp_inputs[1]
                 src_ip, dst_ip = tcp_inputs[2], tcp_inputs[3],
                 tcp_sport, tcp_dport = int(tcp_inputs[4]), int(tcp_inputs[5])
