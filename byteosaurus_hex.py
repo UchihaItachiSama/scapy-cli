@@ -1631,11 +1631,7 @@ def tcp_packet(fuzzy, module, tcp_inputs):
     final_packet = None
     if fuzzy == 'y':
         if module != None:
-            if module == 'VXLAN':
-                src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
-                src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
-                tcp_sport, tcp_dport = RandShort()._fix(), RandShort()
-            elif module == 'MPLS':
+            if module == 'VXLAN' or module == 'MPLS':
                 src_mac, dst_mac = RandMAC()._fix(), RandMAC()._fix()
                 src_ip, dst_ip = RandIP("172.16.0.0/12")._fix(), RandIP("172.16.0.0/12")._fix()
                 tcp_sport, tcp_dport = RandShort()._fix(), RandShort()
@@ -1942,6 +1938,7 @@ def vxlan():
     except ValueError:
         logger.critical("Invalid msg_type, expected integer (1-3)")
         return None
+    
 #################################################################################################################
 def mpls_packet(fuzzy, inner_pkt, mpls_inputs): #TTL and cos value of labels are always set to 255 and 0 respectively
     final_pkt = None
@@ -2045,8 +2042,10 @@ def build_mpls(msg_type):
                     labels = [x.strip() for x in temp_input.split(',')]
                     for k in range(0, len(labels)):
                         try:
-                            if (0 <= int(labels[k]) <= 1048575) is True: #max MPLS label = 2^20
-                                continue
+                            if (0 <= int(labels[k]) <= 1048575) is False: #max MPLS label = 2^20
+                                logger.error(
+                                    "Invalid input '{}' Expected label in range (0-1048575)".format(labels[k]))
+                                return None
                         except ValueError:
                             logger.error(
                                 "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
