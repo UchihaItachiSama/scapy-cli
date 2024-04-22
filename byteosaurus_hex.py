@@ -2267,8 +2267,8 @@ def build_mpls(msg_type):
                     for k in range(0, len(labels)):
                         try:
                             if (0 <= int(labels[k]) <= 1048575) is False: #max MPLS label = 2^20
-                                logger.error
-                                ("Invalid input '{}' Expected label in range (0-1048575)".format(labels[k]))
+                                logger.error(
+                                    "Invalid input '{}' Expected label in range (0-1048575)".format(labels[k]))
                                 return None
                         except ValueError:
                             logger.error(
