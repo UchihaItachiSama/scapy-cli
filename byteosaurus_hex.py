@@ -2250,10 +2250,10 @@ def build_mpls(msg_type):
             arp_type = (input("ARP Type (req/resp) > ").strip()).lower()
             inputs = []
             del arp_input_param[-1]  # Skipping VLAN tag for inner ARP
-            if arp_type == 'req':
-                del arp_input_param[-2] #skipping Target MAC
-                del arp_input_param[-4] #skipping Destination MAC - These are known for ARP request 
             for i in range(0, len(arp_input_param)):
+                if arp_type == 'req' and (arp_input_param[i] in ['Destination MAC', 'Target MAC']): #skipping Target & Destination MAC as known for ARP Request
+                    inputs.insert(i, None)
+                    continue
                 temp_input = input("Inner {} > ".format(arp_input_param[i]))
                 inputs.insert(i, temp_input)
             inner_arp_pkt = arp_packet(fuzzy, 'MPLS', arp_type, inputs)
