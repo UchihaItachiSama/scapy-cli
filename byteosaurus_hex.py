@@ -72,7 +72,7 @@ def requires(module):
         ],
         "MPLS": [
             "Outer Source MAC (de:ad:be:af:ca:fe)", "Outer Destination MAC",
-            "Labels in comma delimited form (Top to Bottom)", "Codeword (y/n)"
+            "Labels in comma delimited form (Top to Bottom)", "Control Word (y/n)"
         ],
         "common": ["Count (c for continous)", "Source Interface"]
     }
@@ -1964,7 +1964,7 @@ def mpls_packet(fuzzy, inner_pkt, mpls_inputs): #TTL and cos value of labels are
                 return None
         else:
             return None  
-        final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / inner_pkt #Skipping Codeword for random packet generation
+        final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / inner_pkt #Skipping Control Word for random packet generation
         return final_pkt          
     elif fuzzy == 'n':
         mpls_labels_list = None
@@ -1991,7 +1991,7 @@ def mpls_packet(fuzzy, inner_pkt, mpls_inputs): #TTL and cos value of labels are
                     mpls_headers = mpls_headers / MPLS(label=int(mpls_labels_list[i]), cos=0, s=bos, ttl=255)
         else:
             return None
-        #PW Codeword logic
+        #PW Control Word logic
         if mpls_inputs[3] is True:
             final_pkt = Ether(src=outer_src_mac, dst=outer_dst_mac, type=0x8847) / mpls_headers / EoMCW(zero=0, reserved=0, seq=0) / inner_pkt
         else:
@@ -2051,11 +2051,11 @@ def build_mpls(msg_type):
                                 "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
                             return None                  
                     mpls_inputs.insert(i,labels)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "y":
                     mpls_inputs.insert(i, True)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "n":
                     mpls_inputs.insert(i, False)
-                elif "Codeword" not in mpls_input_param[i]:
+                elif "Control Word" not in mpls_input_param[i]:
                     mpls_inputs.insert(i, temp_input)
                 else:
                     logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
@@ -2125,11 +2125,11 @@ def build_mpls(msg_type):
                                 "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
                             return None                  
                     mpls_inputs.insert(i,labels)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "y":
                     mpls_inputs.insert(i, True)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "n":
                     mpls_inputs.insert(i, False)
-                elif "Codeword" not in mpls_input_param[i]:
+                elif "Control Word" not in mpls_input_param[i]:
                     mpls_inputs.insert(i, temp_input)
                 else:
                     logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
@@ -2199,11 +2199,11 @@ def build_mpls(msg_type):
                                 "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
                             return None                  
                     mpls_inputs.insert(i,labels)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "y":
                     mpls_inputs.insert(i, True)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "n":
                     mpls_inputs.insert(i, False)
-                elif "Codeword" not in mpls_input_param[i]:
+                elif "Control Word" not in mpls_input_param[i]:
                     mpls_inputs.insert(i, temp_input)
                 else:
                     logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
@@ -2275,11 +2275,11 @@ def build_mpls(msg_type):
                                 "Invalid input '{}' Expected comma separated values in range (0-1048575)".format(labels[k]))
                             return None                  
                     mpls_inputs.insert(i,labels)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "y":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "y":
                     mpls_inputs.insert(i, True)
-                elif "Codeword" in mpls_input_param[i] and temp_input.lower() == "n":
+                elif "Control Word" in mpls_input_param[i] and temp_input.lower() == "n":
                     mpls_inputs.insert(i, False)
-                elif "Codeword" not in mpls_input_param[i]:
+                elif "Control Word" not in mpls_input_param[i]:
                     mpls_inputs.insert(i, temp_input)
                 else:
                     logger.critical("Invalid choice, got '{}' expected values (y/n)".format(temp_input))
