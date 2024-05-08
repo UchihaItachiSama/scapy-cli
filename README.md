@@ -25,5 +25,5 @@ The script currently supports following packet generation modules
 | VXLAN | <ul><li>Vxlan - Inner ICMP</li><li>Vxlan - Inner UDP</li><li>Vxlan - Inner TCP</li><li>Vxlan - Inner ARP</li></ul> | :white_check_mark: | :x: | :white_check_mark: | :x: |
 | Pause Frame</br>(802.3x) |  | :white_check_mark: | :x: | :white_check_mark: | :x: |
 | Priority Flow Control</br>(802.1Qbb) |  | :white_check_mark: | :x: | :white_check_mark: | :x: |
-| MPLS | <ul><li>MPLS - Inner ICMP</li><li>MPLS - Inner UDP</li><li>MPLS - Inner TCP</li><li>MPLS - Inner ARP</li></ul></br>Pseudowire Codeword option available | :white_check_mark: | :x: | :white_check_mark: | :x: |
+| MPLS | <ul><li>MPLS - Inner ICMP</li><li>MPLS - Inner UDP</li><li>MPLS - Inner TCP</li><li>MPLS - Inner ARP</li></ul></br>Pseudowire Control Word option available | :white_check_mark: | :x: | :white_check_mark: | :x: |
 | Load PCAP File | Edit and replay<ul><li>All Packets</li><li>Specific IP flows</li><li>Specific Non-IP flows</li></ul></br>Replay the same pcap | :x: | :x: | :white_check_mark: | :x: |
